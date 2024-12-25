@@ -1,5 +1,6 @@
 // == level.js ==
 import { iscolliding } from './utils.js';
+import { scoreboardobj } from './main.js'
 
 const giftSound = new Audio('assets/audio/coin.mp3');
 giftSound.volume = 0.8;
@@ -91,7 +92,22 @@ export class level {
 
           if (!collision) {
             // chance to be moving
-            if (Math.random() < 0.15) {
+            let oddsPlatformIsMoving = 0.00;
+            const score = scoreboardobj.score;
+
+            if (score < 5) {
+              oddsPlatformIsMoving = 0.15;
+            } else if (score < 10) {
+              oddsPlatformIsMoving = 0.25;
+            } else if (score < 15) {
+              oddsPlatformIsMoving = 0.50;
+            } else if (score < 20) {
+              oddsPlatformIsMoving = 0.75;
+            } else {
+              oddsPlatformIsMoving = 0.90;
+            }
+
+            if (Math.random() < oddsPlatformIsMoving) {
               candidate.moving = true;
               const roll = Math.random();
               if (roll < 0.4) {

@@ -46,7 +46,7 @@ let camera = { x: 0 };
 const player = new playerclass();
 const gamelevel = new level({ maxhorizontal: 250, maxvertical: 80 });
 const enemies = new enemymanager();
-const scoreboardobj = new scoreboard();
+export const scoreboardobj = new scoreboard();
 
 // fewer flakes
 const snowflakes = [];
