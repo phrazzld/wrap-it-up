@@ -1,8 +1,14 @@
 // == main.js ==
 import { enemymanager } from './enemymanager.js';
+import { leaderboard } from './leaderboard.js';
 import { level } from './levels.js';
 import { playerclass } from './player.js';
 import { scoreboard } from './scoreboard.js';
+const gameleaderboard = new leaderboard();
+
+let username = '';
+let maxnamechars = 10;
+let enteringname = false;
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -51,13 +57,55 @@ document.addEventListener('keydown', e => {
   if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
   if (e.code === 'ArrowUp' || e.code === 'Space') keys.up = true;
 
-  if ((gamestate === 'menu' && e.code === 'Enter') || (gamestate === 'gameover' && e.code === 'Enter')) {
-    backgroundMusic.play();
-    initgame();
-    gamestate = 'playing';
-  }
-  if (gamestate === 'gameover' && e.code === 'KeyR') {
-    gamestate = 'menu';
+  // if ((gamestate === 'menu' && e.code === 'Enter') || (gamestate === 'gameover' && e.code === 'Enter')) {
+  //   backgroundMusic.play();
+  //   initgame();
+  //   gamestate = 'playing';
+  // }
+  // if (gamestate === 'gameover' && e.code === 'KeyR') {
+  //   gamestate = 'menu';
+  // }
+
+  if (gamestate === 'menu') {
+    // existing logic to start the game
+    if (e.code === 'Enter') {
+      backgroundMusic.play();
+      initgame();
+      gamestate = 'playing';
+    }
+  } else if (gamestate === 'gameover') {
+    // if we're not currently in name entry
+    if (!enteringname) {
+      if (e.code === 'Enter') {
+        // either go to nameentry or skip it
+        enteringname = true;
+        username = '';
+      } else if (e.code === 'KeyR') {
+        gamestate = 'menu';
+      }
+    } else {
+      // user is typing the name
+      if (e.code === 'Enter') {
+        // finalize
+        if (username.trim().length > 0) {
+          gameleaderboard.addscore(username.trim(), scoreboardobj.score);
+        }
+        enteringname = false;
+        gamestate = 'menu';
+      } else if (e.code === 'Escape' || e.code === 'KeyR') {
+        // bail out
+        enteringname = false;
+        gamestate = 'menu';
+      } else if (e.code === 'Backspace') {
+        // remove last char
+        username = username.slice(0, -1);
+      } else {
+        // add typed char if it's a letter, digit, etc.
+        if (e.key.length === 1 && username.length < maxnamechars) {
+          username += e.key;
+        }
+      }
+    }
   }
 });
 document.addEventListener('keyup', e => {
@@ -185,57 +233,67 @@ function draw() {
 function drawmenu() {
   ctx.drawImage(menuImage, 0, 0, canvas.width, canvas.height);
 
-  // add a subtle frosty overlay
   ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // text styling
-  ctx.fillStyle = '#c00';  // bright holiday red
+  ctx.fillStyle = '#c00';
   ctx.shadowColor = 'rgba(255,255,255,0.8)';
   ctx.shadowBlur = 6;
 
   ctx.font = '60px "Mountains of Christmas", cursive';
   ctx.fillText('merry infinite xmas run!', 50, 100);
 
-  // instructions
   ctx.font = '40px "Mountains of Christmas", cursive';
   ctx.shadowBlur = 3;
-  ctx.fillStyle = '#050'; // a jolly green
+  ctx.fillStyle = '#050';
   ctx.fillText('press enter to begin your jolly quest', 50, 180);
-  ctx.fillText('collect gifts, dodge rogue toys, spread cheer', 50, 230);
 
-  // reset shadow so subsequent draws aren’t blurred
-  ctx.shadowColor = 'transparent';
+  // render leaderboard
+  ctx.font = '30px "Mountains of Christmas", cursive';
+  ctx.fillStyle = '#000';
+  ctx.fillText('leaderboard:', 50, 260);
+
+  const topscores = gameleaderboard.gettopscores();
+  for (let i = 0; i < topscores.length; i++) {
+    ctx.fillText(
+      `${i + 1}. ${topscores[i].name} - ${topscores[i].score}`,
+      50,
+      300 + i * 30
+    );
+  }
 }
 
 function drawgameover() {
-  // draw background
+  // draw background, etc.
   ctx.drawImage(gameOverImage, 0, 0, canvas.width, canvas.height);
 
-  // lighter overlay, maybe a bit stronger to highlight the end-of-game
   ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // big red text with white shadow
   ctx.fillStyle = '#c00';
   ctx.shadowColor = 'rgba(255,255,255,0.8)';
   ctx.shadowBlur = 5;
   ctx.font = '60px "Mountains of Christmas", cursive';
   ctx.fillText('the holiday hustle is over!', 50, 100);
 
-  // smaller text
   ctx.shadowBlur = 2;
   ctx.font = '40px "Mountains of Christmas", cursive';
   ctx.fillStyle = '#000';
   ctx.fillText('score: ' + scoreboardobj.score, 50, 160);
-  ctx.font = '30px "Mountains of Christmas", cursive';
-  ctx.fillText('press enter to try again', 50, 220);
-  ctx.fillText('press r to return to the main menu', 50, 260);
 
+  // instructions
+  if (!enteringname) {
+    ctx.fillText('press enter to submit your score', 50, 220);
+    ctx.fillText('press r to return to the main menu', 50, 260);
+  } else {
+    ctx.fillText('enter your name (then press enter):', 50, 220);
+    // show typed name
+    ctx.fillText(username + '_', 50, 260);
+    ctx.font = '30px "Mountains of Christmas", cursive';
+    ctx.fillText('press backspace to erase, esc or r to cancel', 50, 320);
+  }
   // reset shadow
   ctx.shadowColor = 'transparent';
-  backgroundMusic.currentTime = 0;
-  backgroundMusic.pause();
 }
 
 // main loop

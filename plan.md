@@ -2,17 +2,17 @@
 - increase game difficulty as you collect points
 
 # TODO Later
+- show health as hearts or bar
+- proper sprites
+- add menu soundtrack
+- add game over soundtrack
+- parallax background
 - fix bug where too many enemies spawn on a platform
-- style everything better
 - no play above y axis fold
 - helicopters should patrol better
 - helicopters should shoot downward sometimes
 - jack-in-the-box enemy
-- add menu soundtrack
-- add game over soundtrack
 - game over sound, pause, then show menu
-- show health as hearts or bar
-- proper sprites
 - fix bug where player shifts a bit when platform moves on both axes
 
 # DONE
@@ -30,3 +30,4 @@
 - support range of jump heights
 - toy helicopter enemy
 - moving platforms
+- leaderboard
