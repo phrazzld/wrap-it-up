@@ -57,15 +57,6 @@ document.addEventListener('keydown', e => {
   if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
   if (e.code === 'ArrowUp' || e.code === 'Space') keys.up = true;
 
-  // if ((gamestate === 'menu' && e.code === 'Enter') || (gamestate === 'gameover' && e.code === 'Enter')) {
-  //   backgroundMusic.play();
-  //   initgame();
-  //   gamestate = 'playing';
-  // }
-  // if (gamestate === 'gameover' && e.code === 'KeyR') {
-  //   gamestate = 'menu';
-  // }
-
   if (gamestate === 'menu') {
     // existing logic to start the game
     if (e.code === 'Enter') {
@@ -161,9 +152,23 @@ function update() {
 
   // spawn MORE snow
   snowtimer++;
-  if (snowtimer > 15) {                // 1) spawn more frequently (was 30 before)
+  const score = scoreboardobj.score
+  let snowspawn = 30;
+  if (score < 5) {
+    snowspawn = 15;
+  } else if (score < 10) {
+    snowspawn = 10;
+  } else if (score < 15) {
+    snowspawn = 5;
+  } else if (score < 20) {
+    snowspawn = 3;
+  } else {
+    snowspawn = 1;
+  }
+
+  if (snowtimer > snowspawn) {                // 1) spawn more frequently (was 30 before)
     snowtimer = 0;
-    for (let i = 0; i < 3; i++) {      // 2) spawn multiple flakes at once
+    for (let i = 0; i < 5; i++) {      // 2) spawn multiple flakes at once
       snowflakes.push({
         x: Math.random() * canvas.width + camera.x,
         y: -10,
@@ -290,7 +295,7 @@ function drawgameover() {
     // show typed name
     ctx.fillText(username + '_', 50, 260);
     ctx.font = '30px "Mountains of Christmas", cursive';
-    ctx.fillText('press backspace to erase, esc or r to cancel', 50, 320);
+    ctx.fillText('press backspace to erase, esc to cancel', 50, 320);
   }
   // reset shadow
   ctx.shadowColor = 'transparent';

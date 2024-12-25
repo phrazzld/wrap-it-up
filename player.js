@@ -1,6 +1,6 @@
 // == playerclass.js ==
 const jumpSound = new Audio('assets/audio/jump.mp3');
-jumpSound.volume = 0.5;
+jumpSound.volume = 0.3;
 
 export class playerclass {
   constructor() {

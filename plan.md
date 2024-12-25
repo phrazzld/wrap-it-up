@@ -2,6 +2,7 @@
 - increase game difficulty as you collect points
 
 # TODO Later
+- enemies shouldn't be able to overlap
 - show health as hearts or bar
 - proper sprites
 - add menu soundtrack

@@ -1,5 +1,6 @@
 // == enemymanager.js ==
 import { iscolliding } from './utils.js';
+import { scoreboardobj } from './main.js';
 
 const hitSound = new Audio('assets/audio/ow.mp3');
 hitSound.volume = 1.0;
@@ -22,13 +23,32 @@ export class enemymanager {
   update(delta, level, gravity, player, scoreboard) {
     this.timer += delta;
 
+    const score = scoreboardobj.score;
+    let spawninterval = 0;
+
+    if (score < 5) {
+      spawninterval = 200;
+    } else if (score < 10) {
+      spawninterval = 170;
+    } else if (score < 15) {
+      spawninterval = 130;
+    } else if (score < 20) {
+      spawninterval = 90;
+    } else {
+      spawninterval = 30;
+    }
+
     // spawn new enemies
-    if (this.timer >= this.spawninterval) {
+    if (this.timer >= spawninterval) {
       this.timer = 0;
 
       // decide: normal patroller or helicopter?
-      // e.g. 70% chance patroller, 30% chance helicopter
-      const spawnHelicopter = Math.random() < 0.3;
+      let spawnHelicopter = false;
+      if (score < 5) {
+        spawnHelicopter = false;
+      } else {
+        spawnHelicopter = Math.random() < 0.3;
+      }
 
       const x = player.x + 1000;
       const platformsinsight = level.platforms.filter(
@@ -43,7 +63,7 @@ export class enemymanager {
           const ey = p.y - 40;
           const dir = Math.random() < 0.5 ? -1 : 1;
           this.enemies.push({
-            type: 'patrol',  // new property to differentiate
+            type: 'patrol',
             x: ex,
             y: ey,
             w: 40,
