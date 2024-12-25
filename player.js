@@ -1,4 +1,5 @@
-// == playerclass.js ==
+// playerclass.js
+
 const jumpSound = new Audio('assets/audio/jump.mp3');
 jumpSound.volume = 0.5;
 
@@ -16,6 +17,9 @@ export class playerclass {
     this.animtimer = 0;
     this.health = 3;
     this.onground = false;
+
+    // new boolean to track if player is still holding jump
+    this.isJumping = false;
   }
 
   reset() {
@@ -25,6 +29,7 @@ export class playerclass {
     this.vy = 0;
     this.health = 3;
     this.onground = false;
+    this.isJumping = false;
   }
 
   update(keys, gravity, jumppower) {
@@ -39,18 +44,25 @@ export class playerclass {
       this.vx = 0;
     }
 
-    // jump
+    // check jump start
     if (keys.up && this.onground) {
       this.vy = -jumppower;
       this.onground = false;
-      jumpSound.currentTime = 0; // reset so it can play fully
+      this.isJumping = true;
+      jumpSound.currentTime = 0;
       jumpSound.play();
     }
 
-    // gravity
+    // if we release jump early while still going up, reduce upward velocity
+    if (!keys.up && this.isJumping && this.vy < 0) {
+      this.vy *= 0.5;
+      this.isJumping = false;
+    }
+
+    // apply gravity
     this.vy += gravity;
 
-    // apply velocity
+    // move player
     this.x += this.vx;
     this.y += this.vy;
 

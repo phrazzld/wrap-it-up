@@ -1,14 +1,15 @@
 # TODO Now
-- dynamically determine acceptable fall height
+- moving platforms
 
 # TODO Later
+- jack-in-the-box enemy
 - add menu soundtrack
 - add game over soundtrack
-- make different enemy types
 - game over sound, pause, then show menu
 - show health as hearts or bar
 - proper sprites
 - increase game difficulty as you collect points
+- conveyor belt platforms
 
 # DONE
 - make sure you spawn on a platform
@@ -21,3 +22,6 @@
 - add game sounds
 - jump on top of enemies to kill them
 - press r to restart, x to go to main menu
+- dynamically determine acceptable fall height
+- support range of jump heights
+- toy helicopter enemy
