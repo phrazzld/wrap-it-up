@@ -1,7 +1,11 @@
+// == enemymanager.js ==
 import { iscolliding } from './utils.js';
 
 const hitSound = new Audio('assets/audio/ow.mp3');
-hitSound.volume = 1.0
+hitSound.volume = 1.0;
+
+const enemyKilledSound = new Audio('assets/audio/bop-01.mp3');
+enemyKilledSound.volume = 1.0;
 
 export class enemymanager {
   constructor() {
@@ -22,7 +26,9 @@ export class enemymanager {
     if (this.timer >= this.spawninterval) {
       this.timer = 0;
       const x = player.x + 1000;
-      const platformsinsight = level.platforms.filter(p => p.x < x + 200 && p.x + p.w > x - 200);
+      const platformsinsight = level.platforms.filter(
+        (p) => p.x < x + 200 && p.x + p.w > x - 200
+      );
       if (platformsinsight.length > 0) {
         const p = platformsinsight[Math.floor(Math.random() * platformsinsight.length)];
         const ex = p.x + (Math.random() * (p.w - 40));
@@ -34,7 +40,7 @@ export class enemymanager {
           w: 40,
           h: 40,
           vx: dir * (1 + Math.random() * 1.5),
-          vy: 0
+          vy: 0,
         });
       }
     }
@@ -45,7 +51,7 @@ export class enemymanager {
       e.x += e.vx;
       e.y += e.vy;
 
-      // collision resolution
+      // collision resolution against platforms
       let onplatform = false;
       for (let p of level.platforms) {
         // vertical collision
@@ -85,17 +91,31 @@ export class enemymanager {
 
       // collision with player
       if (iscolliding(player.x, player.y, player.w, player.h, e.x, e.y, e.w, e.h)) {
-        hitSound.play();
-        player.health--;
-        scoreboard.flash();
-        // ephemeral bounce
-        player.vx = (player.x < e.x) ? -6 : 6;
-        player.vy = -5;
-        e.dead = true;
+        // we check if player came from above
+        let enemyTop = e.y;
+        // where was the player's bottom before moving this frame?
+        let oldPlayerBottom = (player.y - player.vy) + player.h;
+
+        if (oldPlayerBottom <= enemyTop) {
+          // player jumped on enemy
+          enemyKilledSound.play();
+          e.dead = true;       // kill enemy
+          player.vy = -8;      // bounce player upward
+          scoreboard.addpoints(1); // optional: reward points for kill
+        } else {
+          // enemy hits player from side or below
+          hitSound.play();
+          player.health--;
+          scoreboard.flash();
+          // ephemeral bounce away
+          player.vx = (player.x < e.x) ? -6 : 6;
+          player.vy = -5;
+          e.dead = true;
+        }
       }
     }
 
-    // purge
-    this.enemies = this.enemies.filter(e => !e.dead);
+    // purge dead enemies
+    this.enemies = this.enemies.filter((e) => !e.dead);
   }
 }

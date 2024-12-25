@@ -1,3 +1,4 @@
+// == playerclass.js ==
 const jumpSound = new Audio('assets/audio/jump.mp3');
 jumpSound.volume = 0.5;
 
@@ -27,7 +28,7 @@ export class playerclass {
   }
 
   update(keys, gravity, jumppower) {
-    // horizontal
+    // horizontal movement
     if (keys.left) {
       this.vx = -this.speed;
       this.direction = -1;
@@ -42,13 +43,14 @@ export class playerclass {
     if (keys.up && this.onground) {
       this.vy = -jumppower;
       this.onground = false;
+      jumpSound.currentTime = 0; // reset so it can play fully
       jumpSound.play();
     }
 
     // gravity
     this.vy += gravity;
 
-    // apply
+    // apply velocity
     this.x += this.vx;
     this.y += this.vy;
 
