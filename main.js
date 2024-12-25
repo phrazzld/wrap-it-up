@@ -7,6 +7,15 @@ import { scoreboard } from './scoreboard.js';
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
+const bgImage = new Image();
+bgImage.src = 'assets/images/background.png';
+
+const menuImage = new Image();
+menuImage.src = 'assets/images/menu.png';
+
+const gameOverImage = new Image();
+gameOverImage.src = 'assets/images/game-over.png';
+
 // audio
 const backgroundMusic = new Audio('assets/audio/soundtrack.mp3');
 backgroundMusic.loop = true;
@@ -102,20 +111,25 @@ function update() {
     gamestate = 'gameover';
   }
 
-  // spawn moderate snow
+  // spawn MORE snow
   snowtimer++;
-  if (snowtimer > 30) {
+  if (snowtimer > 15) {                // 1) spawn more frequently (was 30 before)
     snowtimer = 0;
-    snowflakes.push({
-      x: Math.random() * canvas.width + camera.x,
-      y: -10,
-      vy: 1 + Math.random() * 1,
-      size: 2 + Math.random() * 2
-    });
+    for (let i = 0; i < 3; i++) {      // 2) spawn multiple flakes at once
+      snowflakes.push({
+        x: Math.random() * canvas.width + camera.x,
+        y: -10,
+        vy: 1 + Math.random() * 1,
+        size: 2 + Math.random() * 2
+      });
+    }
   }
+
+  // update flakes
   for (let flake of snowflakes) {
     flake.y += flake.vy;
   }
+  // remove offscreen
   for (let i = snowflakes.length - 1; i >= 0; i--) {
     if (snowflakes[i].y > canvas.height + 10) {
       snowflakes.splice(i, 1);
@@ -137,8 +151,7 @@ function draw() {
     return;
   }
 
-  ctx.fillStyle = '#223';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
 
   // draw level
   gamelevel.draw(ctx, camera);
@@ -170,25 +183,59 @@ function draw() {
 }
 
 function drawmenu() {
-  ctx.fillStyle = '#222';
+  ctx.drawImage(menuImage, 0, 0, canvas.width, canvas.height);
+
+  // add a subtle frosty overlay
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#fff';
-  ctx.font = '30px sans-serif';
-  ctx.fillText('press enter for an infinite xmas run', 50, 100);
-  ctx.fillText('collect unwrapped gifts, avoid the rogue toys', 50, 160);
+
+  // text styling
+  ctx.fillStyle = '#c00';  // bright holiday red
+  ctx.shadowColor = 'rgba(255,255,255,0.8)';
+  ctx.shadowBlur = 6;
+
+  ctx.font = '60px "Mountains of Christmas", cursive';
+  ctx.fillText('merry infinite xmas run!', 50, 100);
+
+  // instructions
+  ctx.font = '40px "Mountains of Christmas", cursive';
+  ctx.shadowBlur = 3;
+  ctx.fillStyle = '#050'; // a jolly green
+  ctx.fillText('press enter to begin your jolly quest', 50, 180);
+  ctx.fillText('collect gifts, dodge rogue toys, spread cheer', 50, 230);
+
+  // reset shadow so subsequent draws aren’t blurred
+  ctx.shadowColor = 'transparent';
 }
 
 function drawgameover() {
-  ctx.fillStyle = '#000';
+  // draw background
+  ctx.drawImage(gameOverImage, 0, 0, canvas.width, canvas.height);
+
+  // lighter overlay, maybe a bit stronger to highlight the end-of-game
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#f22';
-  ctx.font = '40px sans-serif';
-  ctx.fillText('game over dude', 50, 100);
-  ctx.fillStyle = '#fff';
-  ctx.font = '20px sans-serif';
+
+  // big red text with white shadow
+  ctx.fillStyle = '#c00';
+  ctx.shadowColor = 'rgba(255,255,255,0.8)';
+  ctx.shadowBlur = 5;
+  ctx.font = '60px "Mountains of Christmas", cursive';
+  ctx.fillText('the holiday hustle is over!', 50, 100);
+
+  // smaller text
+  ctx.shadowBlur = 2;
+  ctx.font = '40px "Mountains of Christmas", cursive';
+  ctx.fillStyle = '#000';
   ctx.fillText('score: ' + scoreboardobj.score, 50, 160);
-  ctx.fillText('press enter to play again', 50, 220);
+  ctx.font = '30px "Mountains of Christmas", cursive';
+  ctx.fillText('press enter to try again', 50, 220);
   ctx.fillText('press r to return to the main menu', 50, 260);
+
+  // reset shadow
+  ctx.shadowColor = 'transparent';
+  backgroundMusic.currentTime = 0;
+  backgroundMusic.pause();
 }
 
 // main loop

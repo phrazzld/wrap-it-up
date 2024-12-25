@@ -1,15 +1,19 @@
 # TODO Now
-- moving platforms
+- increase game difficulty as you collect points
 
 # TODO Later
+- fix bug where too many enemies spawn on a platform
+- style everything better
+- no play above y axis fold
+- helicopters should patrol better
+- helicopters should shoot downward sometimes
 - jack-in-the-box enemy
 - add menu soundtrack
 - add game over soundtrack
 - game over sound, pause, then show menu
 - show health as hearts or bar
 - proper sprites
-- increase game difficulty as you collect points
-- conveyor belt platforms
+- fix bug where player shifts a bit when platform moves on both axes
 
 # DONE
 - make sure you spawn on a platform
@@ -25,3 +29,4 @@
 - dynamically determine acceptable fall height
 - support range of jump heights
 - toy helicopter enemy
+- moving platforms

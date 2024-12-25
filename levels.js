@@ -25,7 +25,20 @@ export class level {
       x: 0,
       y: 350,
       w: 200,
-      h: 40
+      h: 40,
+
+      moving: false,
+      moveType: 'none',
+      centerX: 0,
+      centerY: 350,
+      moveTimer: 0,
+      moveSpeed: 0,
+      moveAmplitudeX: 0,
+      moveAmplitudeY: 0,
+
+      // store old positions
+      oldX: 0,
+      oldY: 350
     });
     this.generatechunk(0);
   }
@@ -49,7 +62,25 @@ export class level {
           const maxy = Math.min(550, lastp.y + this.maxvertical);
           const newy = Math.random() * (maxy - miny) + miny;
 
-          const candidate = { x: newx, y: newy, w: neww, h: 40 };
+          const candidate = {
+            x: newx,
+            y: newy,
+            w: neww,
+            h: 40,
+
+            moving: false,
+            moveType: 'none',
+            centerX: newx,
+            centerY: newy,
+            moveTimer: 0,
+            moveSpeed: 0,
+            moveAmplitudeX: 0,
+            moveAmplitudeY: 0,
+
+            oldX: newx,
+            oldY: newy
+          };
+
           let collision = false;
           for (let p of this.platforms) {
             if (this.platformsCollide(candidate, p)) {
@@ -59,10 +90,30 @@ export class level {
           }
 
           if (!collision) {
+            // chance to be moving
+            if (Math.random() < 0.15) {
+              candidate.moving = true;
+              const roll = Math.random();
+              if (roll < 0.4) {
+                candidate.moveType = 'vertical';
+                candidate.moveSpeed = 0.02 + Math.random() * 0.03;
+                candidate.moveAmplitudeY = 40 + Math.random() * 30;
+              } else if (roll < 0.8) {
+                candidate.moveType = 'horizontal';
+                candidate.moveSpeed = 0.02 + Math.random() * 0.03;
+                candidate.moveAmplitudeX = 40 + Math.random() * 30;
+              } else {
+                candidate.moveType = 'both';
+                candidate.moveSpeed = 0.02 + Math.random() * 0.03;
+                candidate.moveAmplitudeX = 30 + Math.random() * 30;
+                candidate.moveAmplitudeY = 30 + Math.random() * 30;
+              }
+            }
+
             this.platforms.push(candidate);
             lastp = candidate;
 
-            // random chance to spawn a gift
+            // random chance to spawn gift
             if (Math.random() < 0.4) {
               const gx = candidate.x + (Math.random() * (candidate.w - 20));
               const gy = candidate.y - 20;
@@ -87,21 +138,43 @@ export class level {
   }
 
   update(playerx) {
+    // chunk generation
     const nextboundary = this.generatedchunks * this.chunkwidth + this.chunkwidth;
     if (playerx + 600 > nextboundary) {
       this.generatechunk(this.generatedchunks + 1);
       this.generatedchunks++;
     }
+
+    // update moving platforms
+    for (let p of this.platforms) {
+      if (!p.moving) continue;
+
+      // store old positions
+      p.oldX = p.x;
+      p.oldY = p.y;
+
+      p.moveTimer += p.moveSpeed;
+
+      if (p.moveType === 'vertical') {
+        p.y = p.centerY + Math.sin(p.moveTimer) * p.moveAmplitudeY;
+      } else if (p.moveType === 'horizontal') {
+        p.x = p.centerX + Math.sin(p.moveTimer) * p.moveAmplitudeX;
+      } else if (p.moveType === 'both') {
+        p.x = p.centerX + Math.sin(p.moveTimer) * p.moveAmplitudeX;
+        p.y = p.centerY + Math.cos(p.moveTimer) * p.moveAmplitudeY;
+      }
+    }
   }
 
   draw(ctx, camera) {
-    ctx.fillStyle = '#493';
+    // platform color
+    ctx.fillStyle = '#228B22'; // "forest green" or a more xmas-y green
     for (let p of this.platforms) {
       ctx.fillRect(p.x - camera.x, p.y, p.w, p.h);
     }
 
-    // draw gifts
-    ctx.fillStyle = '#ff0';
+    // gifts
+    ctx.fillStyle = '#fa0'; // maybe gold-ish
     for (let g of this.gifts) {
       if (!g.collected) {
         ctx.fillRect(g.x - camera.x, g.y, g.w, g.h);
@@ -111,21 +184,30 @@ export class level {
 
   collideplayer(player, scoreboard) {
     player.onground = false;
+
     for (let p of this.platforms) {
       if (iscolliding(player.x, player.y, player.w, player.h, p.x, p.y, p.w, p.h)) {
-        const platformtop = p.y;
-        const oldplayerbottom = (player.y - player.vy) + player.h;
-        if (oldplayerbottom <= platformtop) {
-          player.y = platformtop - player.h;
+        // if bounding boxes overlap and the player is moving downward, let's treat it as a landing
+        if (player.vy >= 0) {
+          // shift the player horizontally by however much the platform moved
+          const dx = p.x - p.oldX;
+          player.x += dx;
+
+          // land them on top
+          player.y = p.y - player.h;
           player.vy = 0;
           player.onground = true;
         }
+        // optional: advanced logic for being pushed up, etc.
       }
     }
 
     // collect gifts
     for (let g of this.gifts) {
-      if (!g.collected && iscolliding(player.x, player.y, player.w, player.h, g.x, g.y, g.w, g.h)) {
+      if (
+        !g.collected &&
+        iscolliding(player.x, player.y, player.w, player.h, g.x, g.y, g.w, g.h)
+      ) {
         giftSound.play();
         g.collected = true;
         scoreboard.addpoints(1);
