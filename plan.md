@@ -1,15 +1,14 @@
 # TODO Now
-- enemies should only spawn on platforms with room
-- jump on top of enemies to kill them
+- dynamically determine acceptable fall height
 
 # TODO Later
-- press r to restart, x to go to main menu
 - add menu soundtrack
 - add game over soundtrack
 - make different enemy types
 - game over sound, pause, then show menu
 - show health as hearts or bar
 - proper sprites
+- increase game difficulty as you collect points
 
 # DONE
 - make sure you spawn on a platform
@@ -20,3 +19,5 @@
 - spawn gifts, collect for points
 - add christmas lofi soundtrack
 - add game sounds
+- jump on top of enemies to kill them
+- press r to restart, x to go to main menu

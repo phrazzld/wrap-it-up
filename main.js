@@ -1,7 +1,7 @@
 // == main.js ==
-import { playerclass } from './player.js';
-import { level } from './levels.js';
 import { enemymanager } from './enemymanager.js';
+import { level } from './levels.js';
+import { playerclass } from './player.js';
 import { scoreboard } from './scoreboard.js';
 
 const canvas = document.getElementById('game');
@@ -42,7 +42,7 @@ document.addEventListener('keydown', e => {
   if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
   if (e.code === 'ArrowUp' || e.code === 'Space') keys.up = true;
 
-  if (gamestate === 'menu' && e.code === 'Enter') {
+  if ((gamestate === 'menu' && e.code === 'Enter') || (gamestate === 'gameover' && e.code === 'Enter')) {
     backgroundMusic.play();
     initgame();
     gamestate = 'playing';
@@ -88,13 +88,15 @@ function update() {
     camera.x = player.x - midscreen;
   }
 
-  // if player falls off screen
-  if (player.y > 600) {
+  // dynamically determine bottom of screen
+  const bottom = canvas.height - player.h;
+  // if player falls off screen, game over
+  if (player.y > bottom) {
     gameOverSound.play();
     gamestate = 'gameover';
   }
 
-  // if out of health
+  // if out of health, game over
   if (player.health <= 0) {
     gameOverSound.play();
     gamestate = 'gameover';
@@ -185,7 +187,8 @@ function drawgameover() {
   ctx.fillStyle = '#fff';
   ctx.font = '20px sans-serif';
   ctx.fillText('score: ' + scoreboardobj.score, 50, 160);
-  ctx.fillText('press r to return to menu', 50, 220);
+  ctx.fillText('press enter to play again', 50, 220);
+  ctx.fillText('press r to return to the main menu', 50, 260);
 }
 
 // main loop
