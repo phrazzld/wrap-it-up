@@ -3,6 +3,9 @@ export class scoreboard {
   constructor() {
     this.score = 0;
     this.flashalpha = 0;
+
+    // optional: store a "maxhealth" so we can draw a complete bar
+    this.maxhealth = 3;
   }
 
   addpoints(n) {
@@ -24,19 +27,52 @@ export class scoreboard {
   }
 
   draw(ctx, player) {
-    // bigger text for the score
+    // a crisp white for the main text
     ctx.fillStyle = '#fff';
-    ctx.font = '32px sans-serif';
+    ctx.font = '28px sans-serif';
     ctx.fillText('score: ' + this.score, 20, 40);
 
-    // health right below the score
-    ctx.font = '20px sans-serif';
-    ctx.fillText('health: ' + player.health, 20, 70);
+    // draw the health bar right below
+    this.drawhealthbar(ctx, player);
 
-    // flash effect if recently hit
+    // flash if recently hit
     if (this.flashalpha > 0) {
       ctx.fillStyle = 'rgba(255,0,0,' + this.flashalpha + ')';
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     }
+  }
+
+  drawhealthbar(ctx, player) {
+    // bar settings
+    const barx = 20;
+    const bary = 60;
+    const barwidth = 200;
+    const barheight = 20;
+
+    // draw bg
+    ctx.fillStyle = '#333';
+    ctx.fillRect(barx, bary, barwidth, barheight);
+
+    // calc fill
+    const ratio = player.health / this.maxhealth;
+    const fillw = barwidth * ratio;
+
+    // color for the health fill
+    // let's do something that shifts from green to red as health declines
+    const r = Math.floor((1 - ratio) * 255);
+    const g = Math.floor(ratio * 255);
+    const b = 0;
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(barx, bary, fillw, barheight);
+
+    // an optional border or label
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(barx, bary, barwidth, barheight);
+
+    // label it
+    ctx.font = '14px sans-serif';
+    ctx.fillStyle = '#000';
+    ctx.fillText('health', barx + 4, bary + 15);
   }
 }

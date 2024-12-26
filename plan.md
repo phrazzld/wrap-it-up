@@ -1,14 +1,13 @@
 # TODO Now
-- increase game difficulty as you collect points
 
 # TODO Later
-- enemies shouldn't be able to overlap
-- show health as hearts or bar
+- add health packs
+- enemies should not be able to occupy the same space
+- better render / update handling so slow connections / power saver mode doesn't slow the game
 - proper sprites
 - add menu soundtrack
 - add game over soundtrack
 - parallax background
-- fix bug where too many enemies spawn on a platform
 - no play above y axis fold
 - helicopters should patrol better
 - helicopters should shoot downward sometimes
@@ -32,3 +31,5 @@
 - toy helicopter enemy
 - moving platforms
 - leaderboard
+- increase game difficulty as you collect points
+- show health as hearts or bar
