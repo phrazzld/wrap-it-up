@@ -23,9 +23,9 @@ export class enemymanager {
   update(delta, level, gravity, player, scoreboard) {
     this.timer += delta;
 
+    // dynamic spawn interval (unchanged)
     const score = scoreboardobj.score;
     let spawninterval = 0;
-
     if (score < 5) {
       spawninterval = 200;
     } else if (score < 10) {
@@ -38,15 +38,11 @@ export class enemymanager {
       spawninterval = 30;
     }
 
-    // spawn new enemies
+    // spawn new enemies (unchanged)
     if (this.timer >= spawninterval) {
       this.timer = 0;
-
-      // decide: normal patroller or helicopter?
       let spawnHelicopter = false;
-      if (score < 5) {
-        spawnHelicopter = false;
-      } else {
+      if (score >= 5) {
         spawnHelicopter = Math.random() < 0.3;
       }
 
@@ -57,118 +53,123 @@ export class enemymanager {
       if (platformsinsight.length > 0) {
         const p = platformsinsight[Math.floor(Math.random() * platformsinsight.length)];
 
+        let ex, ey;
         if (!spawnHelicopter) {
-          // === normal "patroller" enemy ===
-          const ex = p.x + (Math.random() * (p.w - 40));
-          const ey = p.y - 40;
+          // normal patroller
+          ex = p.x + (Math.random() * (p.w - 40));
+          ey = p.y - 40;
           const dir = Math.random() < 0.5 ? -1 : 1;
-          this.enemies.push({
+          const newEnemy = {
             type: 'patrol',
             x: ex,
             y: ey,
             w: 40,
             h: 40,
             vx: dir * (1 + Math.random() * 1.5),
-            vy: 0,
-          });
+            vy: 0
+          };
+          if (!this.overlapsExisting(newEnemy)) {
+            this.enemies.push(newEnemy);
+          }
         } else {
-          // === toy helicopter ===
-          // let’s pick a random x above the same platform
-          // and then pick some y offset to hover
-          const ex = p.x + (Math.random() * (p.w - 40));
-          const ey = p.y - 120 - Math.random() * 50;
-          // store a "hover center" so we can do a simple sinusoidal
-          // or keep it static if you prefer
-          this.enemies.push({
+          // helicopter
+          ex = p.x + (Math.random() * (p.w - 40));
+          ey = p.y - 120 - Math.random() * 50;
+          const newEnemy = {
             type: 'helicopter',
             x: ex,
             y: ey,
             w: 40,
             h: 40,
-            vx: (Math.random() < 0.5 ? -1 : 1) * 1.2, // horizontal drifting speed
+            vx: (Math.random() < 0.5 ? -1 : 1) * 1.2,
             vy: 0,
             hoverCenterY: ey,
-            hoverTimer: 0,  // used for a sinusoidal bob
-          });
+            hoverTimer: 0
+          };
+          if (!this.overlapsExisting(newEnemy)) {
+            this.enemies.push(newEnemy);
+          }
         }
       }
     }
 
     // update existing enemies
     for (let e of this.enemies) {
-      // handle each type differently
       if (e.type === 'patrol') {
-        // normal patroller: applies gravity
         e.vy += gravity;
         e.x += e.vx;
         e.y += e.vy;
 
-        // collision resolution against platforms
-        let onplatform = false;
+        let landedOnPlatform = false;
         for (let p of level.platforms) {
-          // vertical collision
+          // check overlap
           if (iscolliding(e.x, e.y, e.w, e.h, p.x, p.y, p.w, p.h)) {
-            let ptop = p.y;
-            let oldebottom = (e.y - e.vy) + e.h;
-            if (oldebottom <= ptop) {
+            // ### fix ### compare e's old bottom to the platform's OLD top
+            const oldEnemyBottom = (e.y - e.vy) + e.h;
+            const oldPlatformTop = p.oldY;
+            // if the enemy was above the old platform top
+            if (oldEnemyBottom <= oldPlatformTop) {
+              // shift horizontally by platform's dx
+              const dx = p.x - p.oldX;
+              e.x += dx;
+              // ### fix ### shift vertically by platform's dy
+              const dy = p.y - p.oldY;
+              e.y += dy;
+              // place enemy on top
               e.y = p.y - e.h;
               e.vy = 0;
+              landedOnPlatform = true;
             }
           }
         }
 
-        // predictive foot check to flip direction
-        const footcheckx = e.x + (e.vx > 0 ? e.w : 0) + e.vx * 5;
-        const footchecky = e.y + e.h + 1;
-        for (let p of level.platforms) {
-          if (
-            footcheckx >= p.x &&
-            footcheckx <= p.x + p.w &&
-            footchecky >= p.y &&
-            footchecky <= p.y + p.h
-          ) {
-            onplatform = true;
-            break;
+        // flip direction if no future platform
+        if (landedOnPlatform) {
+          const footcheckx = e.x + (e.vx > 0 ? e.w : 0) + e.vx * 5;
+          const footchecky = e.y + e.h + 1;
+          let onplatform = false;
+          for (let p of level.platforms) {
+            if (
+              footcheckx >= p.x &&
+              footcheckx <= p.x + p.w &&
+              footchecky >= p.y &&
+              footchecky <= p.y + p.h
+            ) {
+              onplatform = true;
+              break;
+            }
+          }
+          if (!onplatform) {
+            e.vx = -e.vx;
           }
         }
-        if (!onplatform) {
-          e.vx = -e.vx;
-        }
       } else if (e.type === 'helicopter') {
-        // no gravity effect, let's do a hover / bob
         e.hoverTimer += 0.05;
-        // pick a small amplitude for up/down motion
         const amplitude = 20;
-        // update position
-        e.x += e.vx; // can drift horizontally
+        e.x += e.vx;
         e.y = e.hoverCenterY + Math.sin(e.hoverTimer) * amplitude;
-
-        // optional: bounce back if off platform "range"
-        // or just keep drifting freely
-
-        // you can add a check if it's too far behind the player, etc.
       }
 
-      // check if far behind or too low
+      // offscreen cull
       if (e.x + e.w < player.x - 800 || e.y > 2000) {
         e.dead = true;
       }
+    }
 
-      // collision with player
+    // player collisions
+    for (let e of this.enemies) {
       if (iscolliding(player.x, player.y, player.w, player.h, e.x, e.y, e.w, e.h)) {
-        // see if player came from above
         let enemyTop = e.y;
         let oldPlayerBottom = (player.y - player.vy) + player.h;
-
         if (oldPlayerBottom <= enemyTop) {
-          // player jumped on enemy
+          // stomp
           enemyKilledSound.currentTime = 0;
           enemyKilledSound.play();
           e.dead = true;
           player.vy = -8;
           scoreboard.addpoints(1);
         } else {
-          // enemy hits player from side or below
+          // get hit
           hitSound.currentTime = 0;
           hitSound.play();
           player.health--;
@@ -180,7 +181,16 @@ export class enemymanager {
       }
     }
 
-    // purge dead enemies
+    // remove dead
     this.enemies = this.enemies.filter((e) => !e.dead);
+  }
+
+  overlapsExisting(candidate) {
+    for (let e of this.enemies) {
+      if (iscolliding(candidate.x, candidate.y, candidate.w, candidate.h, e.x, e.y, e.w, e.h)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

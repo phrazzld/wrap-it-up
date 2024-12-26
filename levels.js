@@ -1,6 +1,6 @@
 // == level.js ==
 import { iscolliding } from './utils.js';
-import { scoreboardobj } from './main.js'
+import { scoreboardobj } from './main.js';
 
 const giftSound = new Audio('assets/audio/coin.mp3');
 giftSound.volume = 0.8;
@@ -82,6 +82,7 @@ export class level {
             oldY: newy
           };
 
+          // check collision with existing platforms
           let collision = false;
           for (let p of this.platforms) {
             if (this.platformsCollide(candidate, p)) {
@@ -91,10 +92,9 @@ export class level {
           }
 
           if (!collision) {
-            // chance to be moving
-            let oddsPlatformIsMoving = 0.00;
+            // difficulty-based platform motion
+            let oddsPlatformIsMoving = 0.0;
             const score = scoreboardobj.score;
-
             if (score < 5) {
               oddsPlatformIsMoving = 0.15;
             } else if (score < 10) {
@@ -184,13 +184,13 @@ export class level {
 
   draw(ctx, camera) {
     // platform color
-    ctx.fillStyle = '#228B22'; // "forest green" or a more xmas-y green
+    ctx.fillStyle = '#228B22';
     for (let p of this.platforms) {
       ctx.fillRect(p.x - camera.x, p.y, p.w, p.h);
     }
 
     // gifts
-    ctx.fillStyle = '#fa0'; // maybe gold-ish
+    ctx.fillStyle = '#fa0';
     for (let g of this.gifts) {
       if (!g.collected) {
         ctx.fillRect(g.x - camera.x, g.y, g.w, g.h);
@@ -202,19 +202,19 @@ export class level {
     player.onground = false;
 
     for (let p of this.platforms) {
+      // standard bounding box check
       if (iscolliding(player.x, player.y, player.w, player.h, p.x, p.y, p.w, p.h)) {
-        // if bounding boxes overlap and the player is moving downward, let's treat it as a landing
+        // if player is moving downward, treat as landing
         if (player.vy >= 0) {
-          // shift the player horizontally by however much the platform moved
+          // shift horizontally by platform's movement
           const dx = p.x - p.oldX;
           player.x += dx;
 
-          // land them on top
+          // land on top
           player.y = p.y - player.h;
           player.vy = 0;
           player.onground = true;
         }
-        // optional: advanced logic for being pushed up, etc.
       }
     }
 
