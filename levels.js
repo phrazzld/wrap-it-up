@@ -13,6 +13,7 @@ export class level {
   } = {}) {
     this.platforms = [];
     this.gifts = [];
+    this.healthpacks = [];
     this.chunkwidth = 800;
     this.generatedchunks = 0;
     this.maxhorizontal = maxhorizontal;
@@ -158,6 +159,13 @@ export class level {
               this.gifts.push({ x: gx, y: gy, w: 20, h: 20, collected: false });
             }
 
+            // random chance to spawn a health pack
+            if (Math.random() < 0.1) {
+              const gx = candidate.x + (Math.random() * (candidate.w - 20));
+              const gy = candidate.y - 20;
+              this.healthpacks.push({ x: gx, y: gy, w: 20, h: 20, collected: false });
+            }
+
             placed = true;
           }
         }
@@ -218,6 +226,15 @@ export class level {
         ctx.fillRect(g.x - camera.x, g.y, g.w, g.h);
       }
     }
+
+    // health packs
+    // they're red
+    ctx.fillStyle = '#f00';
+    for (let h of this.healthpacks) {
+      if (!h.collected) {
+        ctx.fillRect(h.x - camera.x, h.y, h.w, h.h);
+      }
+    }
   }
 
   collideplayer(player, scoreboard) {
@@ -249,6 +266,19 @@ export class level {
         giftSound.play();
         g.collected = true;
         scoreboard.addpoints(1);
+      }
+    }
+
+    // collect health packs
+    for (let h of this.healthpacks) {
+      if (
+        !h.collected &&
+        iscolliding(player.x, player.y, player.w, player.h, h.x, h.y, h.w, h.h)
+      ) {
+        // TODO: add proper health pack sound
+        giftSound.play();
+        h.collected = true;
+        player.health++;
       }
     }
   }

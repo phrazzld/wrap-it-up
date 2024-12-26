@@ -1,7 +1,8 @@
 # TODO Now
-- add health packs
 
 # TODO Later
+- use health pack sound
+- refactor the fuck out of this slop
 - better render / update handling so slow connections / power saver mode doesn't slow the game
 - proper sprites
 - add menu soundtrack
@@ -34,3 +35,4 @@
 - show health as hearts or bar
 - enemies should not be able to occupy the same space
 - make moving platforms move faster as player progresses
+- add health packs
