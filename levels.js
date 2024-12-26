@@ -107,22 +107,44 @@ export class level {
               oddsPlatformIsMoving = 0.90;
             }
 
+            let moveSpeed, moveAmplitudeX, moveAmplitudeY;
+            if (score < 5) {
+              moveSpeed = 0.02 + Math.random() * 0.03;
+              moveAmplitudeY = 40 + Math.random() * 30;
+              moveAmplitudeX = 40 + Math.random() * 30;
+            } else if (score < 10) {
+              moveSpeed = 0.03 + Math.random() * 0.04;
+              moveAmplitudeY = 50 + Math.random() * 40;
+              moveAmplitudeX = 50 + Math.random() * 40;
+            } else if (score < 15) {
+              moveSpeed = 0.04 + Math.random() * 0.05;
+              moveAmplitudeY = 60 + Math.random() * 50;
+              moveAmplitudeX = 60 + Math.random() * 50;
+            } else if (score < 20) {
+              moveSpeed = 0.05 + Math.random() * 0.06;
+              moveAmplitudeY = 70 + Math.random() * 60;
+              moveAmplitudeX = 70 + Math.random() * 60;
+            } else {
+              moveSpeed = 0.07 + Math.random() * 0.08;
+              moveAmplitudeY = 90 + Math.random() * 80;
+              moveAmplitudeX = 90 + Math.random() * 80;
+            }
+
+            candidate.moveSpeed = moveSpeed;
+
             if (Math.random() < oddsPlatformIsMoving) {
               candidate.moving = true;
               const roll = Math.random();
               if (roll < 0.4) {
                 candidate.moveType = 'vertical';
-                candidate.moveSpeed = 0.02 + Math.random() * 0.03;
-                candidate.moveAmplitudeY = 40 + Math.random() * 30;
+                candidate.moveAmplitudeY = moveAmplitudeY;
               } else if (roll < 0.8) {
                 candidate.moveType = 'horizontal';
-                candidate.moveSpeed = 0.02 + Math.random() * 0.03;
-                candidate.moveAmplitudeX = 40 + Math.random() * 30;
+                candidate.moveAmplitudeX = moveAmplitudeX;
               } else {
                 candidate.moveType = 'both';
-                candidate.moveSpeed = 0.02 + Math.random() * 0.03;
-                candidate.moveAmplitudeX = 30 + Math.random() * 30;
-                candidate.moveAmplitudeY = 30 + Math.random() * 30;
+                candidate.moveAmplitudeX = moveAmplitudeX;
+                candidate.moveAmplitudeY = moveAmplitudeY;
               }
             }
 

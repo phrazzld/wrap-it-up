@@ -1,8 +1,7 @@
 # TODO Now
-- make moving platforms move faster as player progresses
+- add health packs
 
 # TODO Later
-- add health packs
 - better render / update handling so slow connections / power saver mode doesn't slow the game
 - proper sprites
 - add menu soundtrack
@@ -34,3 +33,4 @@
 - increase game difficulty as you collect points
 - show health as hearts or bar
 - enemies should not be able to occupy the same space
+- make moving platforms move faster as player progresses
