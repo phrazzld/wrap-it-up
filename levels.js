@@ -69,7 +69,6 @@ export class level {
             y: newy,
             w: neww,
             h: 40,
-
             moving: false,
             moveType: 'none',
             centerX: newx,
@@ -78,7 +77,6 @@ export class level {
             moveSpeed: 0,
             moveAmplitudeX: 0,
             moveAmplitudeY: 0,
-
             oldX: newx,
             oldY: newy
           };
@@ -93,73 +91,40 @@ export class level {
           }
 
           if (!collision) {
-            // difficulty-based platform motion
-            let oddsPlatformIsMoving = 0.0;
             const score = scoreboardobj.score;
-            if (score < 5) {
-              oddsPlatformIsMoving = 0.15;
-            } else if (score < 10) {
-              oddsPlatformIsMoving = 0.25;
-            } else if (score < 15) {
-              oddsPlatformIsMoving = 0.50;
-            } else if (score < 20) {
-              oddsPlatformIsMoving = 0.75;
-            } else {
-              oddsPlatformIsMoving = 0.90;
-            }
+            const oddsPlatformIsMoving = 1 / (1 + Math.exp(-0.2 * (score - 10)));
+            const baseSpeed = 0.02;
+            const baseAmplitude = 40;
 
-            let moveSpeed, moveAmplitudeX, moveAmplitudeY;
-            if (score < 5) {
-              moveSpeed = 0.02 + Math.random() * 0.03;
-              moveAmplitudeY = 40 + Math.random() * 30;
-              moveAmplitudeX = 40 + Math.random() * 30;
-            } else if (score < 10) {
-              moveSpeed = 0.03 + Math.random() * 0.04;
-              moveAmplitudeY = 50 + Math.random() * 40;
-              moveAmplitudeX = 50 + Math.random() * 40;
-            } else if (score < 15) {
-              moveSpeed = 0.04 + Math.random() * 0.05;
-              moveAmplitudeY = 60 + Math.random() * 50;
-              moveAmplitudeX = 60 + Math.random() * 50;
-            } else if (score < 20) {
-              moveSpeed = 0.05 + Math.random() * 0.06;
-              moveAmplitudeY = 70 + Math.random() * 60;
-              moveAmplitudeX = 70 + Math.random() * 60;
-            } else {
-              moveSpeed = 0.07 + Math.random() * 0.08;
-              moveAmplitudeY = 90 + Math.random() * 80;
-              moveAmplitudeX = 90 + Math.random() * 80;
-            }
-
-            candidate.moveSpeed = moveSpeed;
+            candidate.moveSpeed = baseSpeed + Math.min(score, 50) * 0.0016; // linear speed scaling
+            const amplitudeFactor = baseAmplitude + Math.min(score, 50) * 1.2;
 
             if (Math.random() < oddsPlatformIsMoving) {
               candidate.moving = true;
               const roll = Math.random();
               if (roll < 0.4) {
                 candidate.moveType = 'vertical';
-                candidate.moveAmplitudeY = moveAmplitudeY;
+                candidate.moveAmplitudeY = amplitudeFactor;
               } else if (roll < 0.8) {
                 candidate.moveType = 'horizontal';
-                candidate.moveAmplitudeX = moveAmplitudeX;
+                candidate.moveAmplitudeX = amplitudeFactor;
               } else {
                 candidate.moveType = 'both';
-                candidate.moveAmplitudeX = moveAmplitudeX;
-                candidate.moveAmplitudeY = moveAmplitudeY;
+                candidate.moveAmplitudeX = amplitudeFactor;
+                candidate.moveAmplitudeY = amplitudeFactor;
               }
             }
 
             this.platforms.push(candidate);
             lastp = candidate;
 
-            // random chance to spawn gift
+            // spawn gifts and health packs
             if (Math.random() < 0.4) {
               const gx = candidate.x + (Math.random() * (candidate.w - 20));
               const gy = candidate.y - 20;
               this.gifts.push({ x: gx, y: gy, w: 20, h: 20, collected: false });
             }
 
-            // random chance to spawn a health pack
             if (Math.random() < 0.1) {
               const gx = candidate.x + (Math.random() * (candidate.w - 20));
               const gy = candidate.y - 20;
@@ -173,6 +138,7 @@ export class level {
       }
     }
   }
+
 
   platformsCollide(a, b) {
     return (
@@ -278,7 +244,9 @@ export class level {
         // TODO: add proper health pack sound
         giftSound.play();
         h.collected = true;
-        player.health++;
+        if (player.health < 3) {
+          player.health++;
+        }
       }
     }
   }

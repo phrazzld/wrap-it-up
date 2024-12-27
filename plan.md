@@ -1,8 +1,8 @@
 # TODO Now
+- make difficulty progression more linear, less stepwise
 
 # TODO Later
 - use health pack sound
-- refactor the fuck out of this slop
 - better render / update handling so slow connections / power saver mode doesn't slow the game
 - proper sprites
 - add menu soundtrack
@@ -14,6 +14,7 @@
 - jack-in-the-box enemy
 - game over sound, pause, then show menu
 - fix bug where player shifts a bit when platform moves on both axes
+- trap platforms
 
 # DONE
 - make sure you spawn on a platform
