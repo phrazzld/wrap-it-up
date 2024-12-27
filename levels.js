@@ -1,9 +1,16 @@
 // == level.js ==
-import { iscolliding } from './utils.js';
 import { scoreboardobj } from './main.js';
+import { iscolliding } from './utils.js';
 
 const giftSound = new Audio('assets/audio/coin.mp3');
 giftSound.volume = 0.8;
+
+const bubbleSound1 = new Audio('assets/audio/bubbles-00.mp3');
+const bubbleSound2 = new Audio('assets/audio/bubbles-01.mp3');
+const bubbleSound3 = new Audio('assets/audio/bubbles-02.mp3');
+bubbleSound1.volume = 0.8;
+bubbleSound2.volume = 0.8;
+bubbleSound3.volume = 0.8;
 
 export class level {
   constructor({
@@ -241,8 +248,18 @@ export class level {
         !h.collected &&
         iscolliding(player.x, player.y, player.w, player.h, h.x, h.y, h.w, h.h)
       ) {
-        // TODO: add proper health pack sound
-        giftSound.play();
+        const sound = Math.floor(Math.random() * 3);
+        switch (sound) {
+          case 0:
+            bubbleSound1.play();
+            break;
+          case 1:
+            bubbleSound2.play();
+            break;
+          case 2:
+            bubbleSound3.play();
+            break;
+        }
         h.collected = true;
         if (player.health < 3) {
           player.health++;

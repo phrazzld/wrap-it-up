@@ -1,8 +1,6 @@
 # TODO Now
-- make difficulty progression more linear, less stepwise
 
 # TODO Later
-- use health pack sound
 - better render / update handling so slow connections / power saver mode doesn't slow the game
 - proper sprites
 - add menu soundtrack
@@ -37,3 +35,5 @@
 - enemies should not be able to occupy the same space
 - make moving platforms move faster as player progresses
 - add health packs
+- make difficulty progression more linear, less stepwise
+- use health pack sound
