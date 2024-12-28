@@ -14,13 +14,13 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
 const bgImage = new Image();
-bgImage.src = 'assets/images/background.png';
+bgImage.src = 'assets/images/background.webp';
 
 const menuImage = new Image();
-menuImage.src = 'assets/images/menu.png';
+menuImage.src = 'assets/images/menu.webp';
 
 const gameOverImage = new Image();
-gameOverImage.src = 'assets/images/game-over.png';
+gameOverImage.src = 'assets/images/game-over.webp';
 
 const groundEnemySprite = new Image();
 groundEnemySprite.src = 'assets/sprites/ground-enemy.png';
