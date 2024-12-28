@@ -1,6 +1,4 @@
 # TODO Now
-- add menu soundtrack
-- add game over soundtrack
 
 # TODO Later
 - better render / update handling so slow connections / power saver mode doesn't slow the game
@@ -38,3 +36,5 @@
 - make difficulty progression more linear, less stepwise
 - use health pack sound
 - proper sprites
+- add menu soundtrack
+- add game over soundtrack
