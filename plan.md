@@ -13,6 +13,7 @@
 - game over sound, pause, then show menu
 - fix bug where player shifts a bit when platform moves on both axes
 - trap platforms
+- force player to move forward with chasing blizzard
 
 # DONE
 - make sure you spawn on a platform

@@ -12,6 +12,12 @@ bubbleSound1.volume = 0.8;
 bubbleSound2.volume = 0.8;
 bubbleSound3.volume = 0.8;
 
+const candyCaneSprite = new Image();
+candyCaneSprite.src = 'assets/sprites/candy-cane.png';
+
+const healthPackSprite = new Image();
+healthPackSprite.src = 'assets/sprites/health.png';
+
 export class level {
   constructor({
     maxhorizontal = 250,
@@ -127,15 +133,15 @@ export class level {
 
             // spawn gifts and health packs
             if (Math.random() < 0.4) {
-              const gx = candidate.x + (Math.random() * (candidate.w - 20));
-              const gy = candidate.y - 20;
-              this.gifts.push({ x: gx, y: gy, w: 20, h: 20, collected: false });
+              const gx = candidate.x + (Math.random() * (candidate.w - 40));
+              const gy = candidate.y - 40;
+              this.gifts.push({ x: gx, y: gy, w: 40, h: 40, collected: false });
             }
 
             if (Math.random() < 0.1) {
-              const gx = candidate.x + (Math.random() * (candidate.w - 20));
-              const gy = candidate.y - 20;
-              this.healthpacks.push({ x: gx, y: gy, w: 20, h: 20, collected: false });
+              const gx = candidate.x + (Math.random() * (candidate.w - 40));
+              const gy = candidate.y - 40;
+              this.healthpacks.push({ x: gx, y: gy, w: 40, h: 40, collected: false });
             }
 
             placed = true;
@@ -186,26 +192,35 @@ export class level {
   }
 
   draw(ctx, camera) {
-    // platform color
+    // draw platforms as green rectangles
     ctx.fillStyle = '#228B22';
     for (let p of this.platforms) {
       ctx.fillRect(p.x - camera.x, p.y, p.w, p.h);
     }
 
-    // gifts
-    ctx.fillStyle = '#fa0';
+    // draw gifts with candy cane sprite
     for (let g of this.gifts) {
       if (!g.collected) {
-        ctx.fillRect(g.x - camera.x, g.y, g.w, g.h);
+        ctx.drawImage(
+          candyCaneSprite,
+          g.x - camera.x,
+          g.y,
+          g.w,
+          g.h
+        );
       }
     }
 
-    // health packs
-    // they're red
-    ctx.fillStyle = '#f00';
+    // draw health packs with health pack sprite
     for (let h of this.healthpacks) {
       if (!h.collected) {
-        ctx.fillRect(h.x - camera.x, h.y, h.w, h.h);
+        ctx.drawImage(
+          healthPackSprite,
+          h.x - camera.x,
+          h.y,
+          h.w,
+          h.h
+        );
       }
     }
   }

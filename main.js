@@ -22,6 +22,15 @@ menuImage.src = 'assets/images/menu.png';
 const gameOverImage = new Image();
 gameOverImage.src = 'assets/images/game-over.png';
 
+const groundEnemySprite = new Image();
+groundEnemySprite.src = 'assets/sprites/slime-enemy.png';
+
+const airEnemySprite = new Image();
+airEnemySprite.src = 'assets/sprites/ghost-enemy.png';
+
+const playerSprite = new Image();
+playerSprite.src = 'assets/sprites/player.png';
+
 // audio
 const backgroundMusic = new Audio('assets/audio/soundtrack.mp3');
 backgroundMusic.loop = true;
@@ -210,18 +219,32 @@ function draw() {
   gamelevel.draw(ctx, camera);
 
   // draw enemies
-  ctx.fillStyle = '#0f0';
-  for (let e of enemies.enemies) {
-    ctx.fillRect(e.x - camera.x, e.y, e.w, e.h);
+  for (let e of enemies.enemies.filter(e => e.type === 'patrol')) {
+    ctx.drawImage(
+      groundEnemySprite,
+      e.x - camera.x,
+      e.y,
+      e.w,
+      e.h
+    );
+  }
+  for (let e of enemies.enemies.filter(e => e.type === 'helicopter')) {
+    ctx.drawImage(
+      airEnemySprite,
+      e.x - camera.x,
+      e.y,
+      e.w,
+      e.h
+    );
   }
 
-  // draw player (red block)
-  ctx.save();
-  ctx.translate(player.x - camera.x + player.w / 2, player.y + player.h / 2);
-  ctx.scale(player.direction, 1);
-  ctx.fillStyle = '#f22';
-  ctx.fillRect(-player.w / 2, -player.h / 2, player.w, player.h);
-  ctx.restore();
+  ctx.drawImage(
+    playerSprite,
+    player.x - camera.x,
+    player.y,
+    player.w,
+    player.h
+  );
 
   // snow
   ctx.fillStyle = '#fff';
