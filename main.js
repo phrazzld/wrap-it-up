@@ -36,6 +36,10 @@ const backgroundMusic = new Audio('assets/audio/soundtrack.mp3');
 backgroundMusic.loop = true;
 backgroundMusic.volume = 0.3;
 
+const menuMusic = new Audio('assets/audio/menu.mp3');
+menuMusic.loop = true;
+menuMusic.volume = 0.4;
+
 const gameOverSound = new Audio('assets/audio/game-over-00.mp3');
 gameOverSound.volume = 0.7;
 
@@ -69,7 +73,6 @@ document.addEventListener('keydown', e => {
   if (gamestate === 'menu') {
     // existing logic to start the game
     if (e.code === 'Enter') {
-      backgroundMusic.play();
       initgame();
       gamestate = 'playing';
     }
@@ -115,6 +118,9 @@ document.addEventListener('keyup', e => {
 });
 
 function initgame() {
+  menuMusic.currentTime = 0;
+  menuMusic.pause();
+  backgroundMusic.play();
   player.reset();
   camera.x = 0;
   scoreboardobj.reset();
@@ -151,12 +157,20 @@ function update() {
   if (player.y > bottom) {
     gameOverSound.play();
     gamestate = 'gameover';
+    backgroundMusic.currentTime = 0;
+    backgroundMusic.pause();
+    menuMusic.currentTime = 0;
+    menuMusic.play();
   }
 
   // if out of health, game over
   if (player.health <= 0) {
     gameOverSound.play();
     gamestate = 'gameover';
+    backgroundMusic.currentTime = 0;
+    backgroundMusic.pause();
+    menuMusic.currentTime = 0;
+    menuMusic.play();
   }
 
   // spawn MORE snow
