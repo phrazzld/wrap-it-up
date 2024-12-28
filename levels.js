@@ -18,6 +18,9 @@ candyCaneSprite.src = 'assets/sprites/candy-cane.png';
 const healthPackSprite = new Image();
 healthPackSprite.src = 'assets/sprites/health.png';
 
+const platformSprite = new Image();
+platformSprite.src = 'assets/sprites/snow.png';
+
 export class level {
   constructor({
     maxhorizontal = 250,
@@ -193,9 +196,16 @@ export class level {
 
   draw(ctx, camera) {
     // draw platforms as green rectangles
-    ctx.fillStyle = '#228B22';
+    // ctx.fillStyle = '#228B22';
     for (let p of this.platforms) {
-      ctx.fillRect(p.x - camera.x, p.y, p.w, p.h);
+      // ctx.fillRect(p.x - camera.x, p.y, p.w, p.h);
+      ctx.drawImage(
+        platformSprite,
+        p.x - camera.x,
+        p.y,
+        p.w,
+        p.h
+      );
     }
 
     // draw gifts with candy cane sprite

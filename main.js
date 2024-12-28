@@ -23,7 +23,7 @@ const gameOverImage = new Image();
 gameOverImage.src = 'assets/images/game-over.png';
 
 const groundEnemySprite = new Image();
-groundEnemySprite.src = 'assets/sprites/slime-enemy.png';
+groundEnemySprite.src = 'assets/sprites/ground-enemy.png';
 
 const airEnemySprite = new Image();
 airEnemySprite.src = 'assets/sprites/ghost-enemy.png';
