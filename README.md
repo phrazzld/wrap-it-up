@@ -30,7 +30,7 @@ Jump between platforms, collect points, stomp enemies, and avoid falling to your
 
 ## Credits
 
-- Game development built with JavaScript, powered by ChatGPT
+- OpenAI o1 generated most of the code
 - Music generated using Suno
 - Sound effects created with Eleven Labs
 - Sprites pulled from Open Game Art
