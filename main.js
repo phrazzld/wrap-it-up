@@ -326,7 +326,6 @@ function drawgameover() {
   // instructions
   if (!enteringname) {
     ctx.fillText('press enter to submit your score', 50, 220);
-    ctx.fillText('press r to return to the main menu', 50, 260);
   } else {
     ctx.fillText('enter your name (then press enter):', 50, 220);
     // show typed name

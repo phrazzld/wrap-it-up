@@ -1,6 +1,8 @@
 # TODO Now
 
 # TODO Later
+- support volume control / muting
+- fix menu nav
 - better render / update handling so slow connections / power saver mode doesn't slow the game
 - parallax background
 - no play above y axis fold
