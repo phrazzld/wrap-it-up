@@ -1,4 +1,5 @@
 // == level.js ==
+import { GameConfig } from './gameconfig.js';
 import { scoreboardobj } from './main.js';
 import { iscolliding } from './utils.js';
 
@@ -181,7 +182,7 @@ export class level {
       p.oldX = p.x;
       p.oldY = p.y;
 
-      p.moveTimer += p.moveSpeed * deltaTime * 60;
+      p.moveTimer += p.moveSpeed * deltaTime * GameConfig.GAME_SPEED;
 
       if (p.moveType === 'vertical') {
         p.y = p.centerY + Math.sin(p.moveTimer) * p.moveAmplitudeY;

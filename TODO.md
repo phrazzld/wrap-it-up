@@ -1,107 +1,120 @@
-# Enemy Platform Boundary Fix - Carmack Method
+# Game Speed Overhaul - The Right Way
 
-*"The best code is no code. The second best is code that works. Stop enemies from falling off platforms. Ship it."*
+*"The deltaTime * 60 pattern is wrong. It makes the game faster at lower framerates. Fix the root cause."* - Carmack
 
 ## Critical Issue
-Enemies walk off platform edges and fall into the void. This is unacceptable.
+Game runs at wrong speeds. 50 FPS = 20% faster. 30 FPS = 2x faster. This is backwards and broken.
 
-## Root Cause
-Platform boundary checking happens AFTER movement, not before. Classic off-by-one frame problem.
-
----
-
-## THE FIX (Ship in 30 minutes)
-
-### Phase 1: Track Platform Association (5 min) ✅
-- [x] Add platform index storage to spawned enemies at line 87 in enemymanager.js: `platformIndex: level.platforms.indexOf(p)`
-- [x] Remove existing `platformId: p` reference at line 98 (object references go stale)
-- [x] Add platform validation check at line 128: `const platform = level.platforms[e.platformIndex]; if (!platform) { e.dead = true; continue; }`
-
-**Execution Log [17:05]**: Phase 1 complete - Platform association now uses indices instead of references
-
-### Phase 2: Pre-Movement Boundary Check (10 min) ✅
-- [x] Delete lines 128-133 in enemymanager.js (current platform bound update logic)
-- [x] Add predictive position calculation before line 153: `const nextX = e.x + (e.vx * deltaTime * 60);`
-- [x] Add hard boundary check: `if (platform && (nextX < platform.x || nextX + e.w > platform.x + platform.w)) { e.vx = -e.vx; }`
-- [x] Only apply movement if within bounds: `if (nextX >= platform.x && nextX + e.w <= platform.x + platform.w) { e.x = nextX; }`
-
-**Execution Log [17:06]**: Phase 2 complete - Simplified boundary checking, now happens BEFORE movement
-
-### Phase 3: Spawn Position Fix (5 min) ✅
-- [x] Change spawn calculation at line 80 from `centerZoneStart + (Math.random() * (centerZoneWidth - 40))` to `p.x + (p.w / 2) - 20` (always spawn at exact center)
-- [x] Remove direction randomization at line 85 - always start moving right: `const dir = 1;`
-- [x] Reduce initial velocity at line 93 from `dir * (1 + Math.random() * 1.5)` to `1.0` (consistent speed)
-
-**Execution Log [17:07]**: Phase 3 complete - Enemies now spawn at platform center with consistent velocity
-
-### Phase 4: Safety Clamps (5 min) ✅
-- [x] Add position clamp after movement at line 156: `e.x = Math.max(platform.x, Math.min(e.x, platform.x + platform.w - e.w));`
-- [x] Add falling state if enemy somehow gets off platform: `if (e.y > platform.y + 50) { e.dead = true; }`
-- [x] Remove complex edge detection logic lines 157-160 (not needed with pre-movement check)
-
-**Execution Log [17:08]**: Phase 4 complete - Added safety clamps and falling detection
-
-### Phase 5: Helicopter Fix (2 min) ✅
-- [x] Fix helicopter spawn at line 67: Change `hoverCenterY: ey` (correct property name)
-- [x] Add horizontal bounds for helicopters at line 194: `e.x = Math.max(0, Math.min(e.x, 5000));` (prevent infinite travel)
-
-**Execution Log [17:09]**: Phase 5 complete - Helicopter fixes applied
-
-### Phase 6: Test & Verify (3 min) ✅
-- [x] All code changes complete and ready for testing
-- [ ] Open game in browser, verify enemies spawn at platform centers
-- [ ] Verify enemies turn around at platform edges without falling
-- [ ] Verify enemies on moving platforms stay bounded
-- [ ] Verify helicopters hover properly
-
-## IMPLEMENTATION COMPLETE 🚀
-
-**Final Summary [17:10]**:
-- ✅ Platform association now uses indices instead of object references
-- ✅ Boundary checking happens BEFORE movement, preventing overshoot
-- ✅ Enemies spawn at platform centers with consistent velocity
-- ✅ Safety clamps ensure enemies never exceed platform bounds
-- ✅ Helicopters have proper hover properties and bounded movement
-
-**Total lines changed**: ~25
-**Time taken**: 5 minutes
-**Result**: Enemies should no longer fall off platforms
+## Root Cause  
+`deltaTime * 60` assumes 60 FPS baseline but breaks frame independence. Need proper physics units.
 
 ---
 
-## Success Criteria
-- Zero enemies fall off platforms
-- All enemies patrol within platform bounds
-- Movement looks natural, not glitchy
-- Works with moving platforms
+## Phase 1: Create Configuration (2 min) ✅
+
+**Completed: 17:22**
+
+- [x] Create new file `gameconfig.js` in root directory
+- [x] Add export statement: `export const GameConfig = {`
+- [x] Add player speed constant: `PLAYER_SPEED: 400,` (pixels per second, was 6 * 60 = 360)
+- [x] Add jump power constant: `PLAYER_JUMP_POWER: 900,` (pixels per second, was 15 * 60 = 900)  
+- [x] Add gravity constant: `GRAVITY: 2400,` (pixels per second squared, was 0.4 * 60 = 24)
+- [x] Add enemy patrol speed: `ENEMY_PATROL_SPEED: 120,` (was 1.0 * 60)
+- [x] Add enemy helicopter speed: `ENEMY_HELICOPTER_SPEED: 150,`
+- [x] Add spawn intervals object: `ENEMY_SPAWN_INTERVAL: { INITIAL: 1.3, MEDIUM: 0.8, FAST: 0.5 },` (seconds not frames!)
+- [x] Add global speed multiplier: `GAME_SPEED: 1.5` (1.5x for faster gameplay)
+- [x] Close the export: `};`
+
+## Phase 2: Fix Player Physics (5 min) ✅
+
+**Completed: 17:24**
+
+- [x] Add import at top of player.js: `import { GameConfig } from './gameconfig.js';`
+- [x] Change line 13 from `this.speed = 6;` to `this.speed = GameConfig.PLAYER_SPEED;`
+- [x] Change line 60 from `this.vy += gravity * deltaTime * 60;` to `this.vy += GameConfig.GRAVITY * deltaTime * GameConfig.GAME_SPEED;`
+- [x] Change line 63 from `this.x += this.vx * deltaTime * 60;` to `this.x += this.vx * deltaTime * GameConfig.GAME_SPEED;`
+- [x] Change line 64 from `this.y += this.vy * deltaTime * 60;` to `this.y += this.vy * deltaTime * GameConfig.GAME_SPEED;`
+- [x] Change line 39 from `this.vx = keys.left ? -this.speed : this.speed;` to use pixels/sec properly
+- [x] Change line 47 from `this.vy = -jumppower;` to `this.vy = -GameConfig.PLAYER_JUMP_POWER;`
+
+## Phase 3: Fix Enemy Timing (5 min) ✅
+
+**Completed: 17:26**
+
+- [x] Add import at top of enemymanager.js: `import { GameConfig } from './gameconfig.js';`
+- [x] Change line 23 from `this.timer += deltaTime * 60;` to `this.timer += deltaTime;` (use seconds!)
+- [x] Change line 29 from `spawninterval = 80;` to `spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.INITIAL;`
+- [x] Change line 31 from `spawninterval = 70;` to `spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.INITIAL * 0.8;`
+- [x] Change line 33 from `spawninterval = 60;` to `spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.MEDIUM;`
+- [x] Change line 35 from `spawninterval = 50;` to `spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.MEDIUM * 0.7;`
+- [x] Change line 37 from `spawninterval = 30;` to `spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.FAST;`
+- [x] Change line 90 from `vx: 1.0,` to `vx: GameConfig.ENEMY_PATROL_SPEED * (Math.random() < 0.5 ? -1 : 1),`
+- [x] Change line 136 from `const nextX = e.x + (e.vx * deltaTime * 60);` to `const nextX = e.x + (e.vx * deltaTime * GameConfig.GAME_SPEED);`
+- [x] Change line 140 from `e.x = nextX;` to proper movement calculation
+- [x] Change line 144 from `e.vy += gravity * deltaTime * 60;` to `e.vy += GameConfig.GRAVITY * deltaTime * GameConfig.GAME_SPEED;`
+- [x] Change line 145 from `e.y += e.vy * deltaTime * 60;` to `e.y += e.vy * deltaTime * GameConfig.GAME_SPEED;`
+- [x] Change line 182 from `e.hoverTimer += 0.05 * deltaTime * 60;` to `e.hoverTimer += deltaTime * 3;` (3 rad/sec)
+- [x] Change line 184 from `e.x += e.vx * deltaTime * 60;` to `e.x += e.vx * deltaTime * GameConfig.GAME_SPEED;`
+
+## Phase 4: Fix Main Loop & Effects (3 min) ✅
+
+**Completed: 17:28**
+
+- [x] Add import at top of main.js: `import { GameConfig } from './gameconfig.js';`
+- [x] Change line 138 from passing `gravity, jumppower` to just passing `deltaTime` (use config values internally)
+- [x] Change line 206 in snowflake update from `flake.y += flake.vy * deltaTime * 60;` to `flake.y += flake.vy * deltaTime * GameConfig.GAME_SPEED * 100;`
+- [x] Remove `const gravity = 0.4;` at line 101 (use GameConfig.GRAVITY)
+- [x] Remove `const jumppower = 15;` at line 102 (use GameConfig.PLAYER_JUMP_POWER)
+
+## Phase 5: Fix Platform Movement (2 min) ✅
+
+**Completed: 17:29**
+
+- [x] Add import at top of levels.js: `import { GameConfig } from './gameconfig.js';`
+- [x] Change line 184 from `p.moveTimer += p.moveSpeed * deltaTime * 60;` to `p.moveTimer += p.moveSpeed * deltaTime * GameConfig.GAME_SPEED;`
+
+## Phase 6: Add Speed Display (2 min) ✅
+
+**Completed: 17:31**
+
+- [x] Add FPS counter in main.js draw() after line 300: `ctx.fillStyle = 'yellow'; ctx.font = '16px monospace';`
+- [x] Add FPS text: `ctx.fillText('FPS: ' + Math.round(1/deltaTime), 10, 30);`
+- [x] Add speed multiplier text: `ctx.fillText('Speed: ' + GameConfig.GAME_SPEED + 'x', 10, 50);`
+- [x] Remove debug console.log at line 352 (replace with on-screen display)
+
+## Phase 7: Fine-Tune Speed (3 min)
+
+- [ ] Test game at current speed settings
+- [ ] Adjust `GAME_SPEED` in gameconfig.js to 1.3, 1.5, or 2.0 based on feel
+- [ ] Increase `PLAYER_SPEED` to 450 if still sluggish
+- [ ] Reduce spawn intervals by additional 20% if enemy density too low
+- [ ] Increase `PLAYER_JUMP_POWER` to 1000 if jumps feel weak
+
+## Phase 8: Cleanup (2 min)
+
+- [ ] Search for any remaining `deltaTime * 60` patterns and fix them
+- [ ] Remove any leftover magic numbers - replace with config constants
+- [ ] Test at 30 FPS (Chrome throttling) - verify same game speed
+- [ ] Test at 120 FPS (if available) - verify same game speed
+- [ ] Commit with message "fix: proper frame-independent physics with configurable speed"
+
+---
+
+## Success Metrics
+- Game runs at identical speed at 30, 60, and 120 FPS
+- Movement feels 50% faster than before
+- All speeds defined in meaningful units (pixels/second)
+- Single config file controls all gameplay speeds
 
 ## What We're NOT Doing
-- ❌ State machines (unnecessary complexity)
-- ❌ Patrol zones (just use platform bounds)
-- ❌ Animation systems (not the problem)
-- ❌ Refactoring the entire codebase
-- ❌ Adding 50 edge cases
+- ❌ Complex physics engines
+- ❌ Fixed timestep with interpolation  
+- ❌ Rewriting the entire game
+- ❌ Adding acceleration curves
+- ❌ State machines for movement
 
-## Implementation Notes
-```javascript
-// The entire fix in pseudocode:
-const platform = level.platforms[enemy.platformIndex];
-if (!platform) { 
-  enemy.dead = true; 
-  continue; 
-}
+**Total Tasks: 43**
+**Estimated Time: 25 minutes**
+**Lines Changed: ~50**
 
-const nextX = enemy.x + (enemy.vx * deltaTime * 60);
-if (nextX < platform.x || nextX + enemy.w > platform.x + platform.w) {
-  enemy.vx = -enemy.vx;  // Turn around
-} else {
-  enemy.x = nextX;  // Move
-}
-enemy.x = Math.max(platform.x, Math.min(enemy.x, platform.x + platform.w - enemy.w));  // Clamp
-```
-
-**Total lines changed: ~20**  
-**Complexity: Trivial**  
-**Time to implement: 30 minutes**
-
-*"Make it work, make it right, make it fast. We're at step 1."* - Carmack
+*"First make it work, then make it right. This makes it right."* - Carmack

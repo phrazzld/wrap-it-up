@@ -1,4 +1,6 @@
 // == playerclass.js ==
+import { GameConfig } from './gameconfig.js';
+
 const jumpSound = new Audio('assets/audio/jump.mp3');
 jumpSound.volume = 0.3;
 
@@ -10,7 +12,7 @@ export class playerclass {
     this.h = 60;
     this.vx = 0;
     this.vy = 0;
-    this.speed = 6;  // Increased from 4 for better game feel
+    this.speed = GameConfig.PLAYER_SPEED;
     this.direction = 1;
     this.animframe = 0;
     this.animtimer = 0;
@@ -29,7 +31,7 @@ export class playerclass {
     this.isJumping = false;
   }
 
-  update(keys, gravity, jumppower, deltaTime) {
+  update(keys, deltaTime) {
     // horizontal
     if (keys.left) {
       this.vx = -this.speed;
@@ -43,7 +45,7 @@ export class playerclass {
 
     // jump start
     if (keys.up && this.onground) {
-      this.vy = -jumppower;
+      this.vy = -GameConfig.PLAYER_JUMP_POWER;
       this.onground = false;
       this.isJumping = true;
       jumpSound.currentTime = 0;
@@ -57,11 +59,11 @@ export class playerclass {
     }
 
     // apply gravity
-    this.vy += gravity * deltaTime * 60;
+    this.vy += GameConfig.GRAVITY * deltaTime * GameConfig.GAME_SPEED;
 
     // move
-    this.x += this.vx * deltaTime * 60;
-    this.y += this.vy * deltaTime * 60;
+    this.x += this.vx * deltaTime * GameConfig.GAME_SPEED;
+    this.y += this.vy * deltaTime * GameConfig.GAME_SPEED;
 
     // animate
     if (this.vx !== 0) {

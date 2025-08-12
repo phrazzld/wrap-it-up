@@ -1,5 +1,6 @@
 // == enemymanager.js ==
 import { iscolliding } from './utils.js';
+import { GameConfig } from './gameconfig.js';
 
 const hitSound = new Audio('assets/audio/ow.mp3');
 hitSound.volume = 1.0;
@@ -19,22 +20,22 @@ export class enemymanager {
     this.timer = 0;
   }
 
-  update(deltaTime, level, gravity, player, scoreboard) {
-    this.timer += deltaTime * 60;
+  update(deltaTime, level, player, scoreboard) {
+    this.timer += deltaTime;  // Use seconds, not frames!
 
     // dynamic spawn interval
     const score = scoreboard.score;
     let spawninterval = 0;
     if (score < 5) {
-      spawninterval = 80;  // Reduced from 200 for faster initial spawning
+      spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.INITIAL;
     } else if (score < 10) {
-      spawninterval = 70;  // Reduced from 170
+      spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.INITIAL * 0.8;
     } else if (score < 15) {
-      spawninterval = 60;  // Reduced from 130
+      spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.MEDIUM;
     } else if (score < 20) {
-      spawninterval = 50;  // Reduced from 90
+      spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.MEDIUM * 0.7;
     } else {
-      spawninterval = 30;
+      spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.FAST;
     }
 
     // spawn new enemies
@@ -87,7 +88,7 @@ export class enemymanager {
             y: ey,
             w: 40,
             h: 40,
-            vx: 1.0,  // Consistent speed, no randomization
+            vx: GameConfig.ENEMY_PATROL_SPEED * (Math.random() < 0.5 ? -1 : 1),
             vy: 0,
             // Store platform bounds for reliable edge detection
             platformLeft: p.x,
@@ -130,7 +131,7 @@ export class enemymanager {
         }
         
         // Pre-movement boundary check - simple and effective
-        const nextX = e.x + (e.vx * deltaTime * 60);
+        const nextX = e.x + (e.vx * deltaTime * GameConfig.GAME_SPEED);
         if (nextX < platform.x || nextX + e.w > platform.x + platform.w) {
           e.vx = -e.vx;  // Turn around
         } else {
@@ -138,8 +139,8 @@ export class enemymanager {
         }
         
         // Apply gravity
-        e.vy += gravity * deltaTime * 60;
-        e.y += e.vy * deltaTime * 60;
+        e.vy += GameConfig.GRAVITY * deltaTime * GameConfig.GAME_SPEED;
+        e.y += e.vy * deltaTime * GameConfig.GAME_SPEED;
         
         // Safety clamp position to platform bounds
         e.x = Math.max(platform.x, Math.min(e.x, platform.x + platform.w - e.w));
@@ -179,9 +180,9 @@ export class enemymanager {
           }
         }
       } else if (e.type === 'helicopter') {
-        e.hoverTimer += 0.05 * deltaTime * 60;
+        e.hoverTimer += deltaTime * 3;  // 3 rad/sec
         const amplitude = 20;
-        e.x += e.vx * deltaTime * 60;
+        e.x += e.vx * deltaTime * GameConfig.GAME_SPEED;
         e.x = Math.max(0, Math.min(e.x, 5000));  // Prevent infinite travel
         e.y = e.hoverCenterY + Math.sin(e.hoverTimer) * amplitude;
       }

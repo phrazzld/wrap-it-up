@@ -1,4 +1,5 @@
 // == main.js ==
+import { GameConfig } from './gameconfig.js';
 import { enemymanager } from './enemymanager.js';
 import { leaderboard } from './leaderboard.js';
 import { level } from './levels.js';
@@ -52,8 +53,7 @@ resizecanvas();
 
 let gamestate = 'menu';
 const keys = { left: false, right: false, up: false };
-const gravity = 0.4;
-const jumppower = 15;
+// Gravity and jump power now in GameConfig
 let camera = { x: 0 };
 
 const player = new playerclass();
@@ -135,7 +135,7 @@ function update(deltaTime) {
   if (gamestate !== 'playing') return;
 
   // update player
-  player.update(keys, gravity, jumppower, deltaTime);
+  player.update(keys, deltaTime);
   // check collisions with platforms & gifts
   gamelevel.collideplayer(player, scoreboardobj);
   // spawn new chunks
@@ -143,7 +143,7 @@ function update(deltaTime) {
   // update scoreboard effects
   scoreboardobj.update();
   // update enemies
-  enemies.update(deltaTime, gamelevel, gravity, player, scoreboardobj);
+  enemies.update(deltaTime, gamelevel, player, scoreboardobj);
 
   // camera
   const midscreen = canvas.width * 0.5;
@@ -203,7 +203,7 @@ function update(deltaTime) {
 
   // update flakes
   for (let flake of snowflakes) {
-    flake.y += flake.vy * deltaTime * 60;
+    flake.y += flake.vy * deltaTime * GameConfig.GAME_SPEED * 100;
   }
   // remove offscreen
   for (let i = snowflakes.length - 1; i >= 0; i--) {
@@ -270,6 +270,12 @@ function draw() {
 
   // scoreboard
   scoreboardobj.draw(ctx, player);
+  
+  // FPS and speed display
+  ctx.fillStyle = 'yellow';
+  ctx.font = '16px monospace';
+  ctx.fillText('FPS: ' + Math.round(1/deltaTime), 10, 30);
+  ctx.fillText('Speed: ' + GameConfig.GAME_SPEED + 'x', 10, 50);
 }
 
 function drawmenu() {
@@ -339,18 +345,14 @@ function drawgameover() {
 
 // main loop
 let lastTime = 0;
+let deltaTime = 0.016;  // Default for FPS display
 function gameloop(currentTime) {
   if (!currentTime) {
     requestAnimationFrame(gameloop);
     return;
   }
-  const deltaTime = lastTime ? Math.min((currentTime - lastTime) / 1000, 0.1) : 0.016;
+  deltaTime = lastTime ? Math.min((currentTime - lastTime) / 1000, 0.1) : 0.016;
   lastTime = currentTime;
-  
-  // Debug: Log deltaTime occasionally
-  if (Math.random() < 0.01) { // Log 1% of frames
-    console.log('deltaTime:', deltaTime.toFixed(4), 'FPS:', Math.round(1/deltaTime));
-  }
   
   update(deltaTime);
   draw();
