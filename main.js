@@ -131,19 +131,19 @@ function initgame() {
   enemies.reset();
 }
 
-function update() {
+function update(deltaTime) {
   if (gamestate !== 'playing') return;
 
   // update player
-  player.update(keys, gravity, jumppower);
+  player.update(keys, gravity, jumppower, deltaTime);
   // check collisions with platforms & gifts
   gamelevel.collideplayer(player, scoreboardobj);
   // spawn new chunks
-  gamelevel.update(player.x);
+  gamelevel.update(player.x, deltaTime);
   // update scoreboard effects
   scoreboardobj.update();
   // update enemies
-  enemies.update(1, gamelevel, gravity, player, scoreboardobj);
+  enemies.update(deltaTime, gamelevel, gravity, player, scoreboardobj);
 
   // camera
   const midscreen = canvas.width * 0.5;
@@ -203,7 +203,7 @@ function update() {
 
   // update flakes
   for (let flake of snowflakes) {
-    flake.y += flake.vy;
+    flake.y += flake.vy * deltaTime * 60;
   }
   // remove offscreen
   for (let i = snowflakes.length - 1; i >= 0; i--) {
@@ -338,10 +338,23 @@ function drawgameover() {
 }
 
 // main loop
-function gameloop() {
-  update();
+let lastTime = 0;
+function gameloop(currentTime) {
+  if (!currentTime) {
+    requestAnimationFrame(gameloop);
+    return;
+  }
+  const deltaTime = lastTime ? Math.min((currentTime - lastTime) / 1000, 0.1) : 0.016;
+  lastTime = currentTime;
+  
+  // Debug: Log deltaTime occasionally
+  if (Math.random() < 0.01) { // Log 1% of frames
+    console.log('deltaTime:', deltaTime.toFixed(4), 'FPS:', Math.round(1/deltaTime));
+  }
+  
+  update(deltaTime);
   draw();
   requestAnimationFrame(gameloop);
 }
 
-gameloop();
+requestAnimationFrame(gameloop);

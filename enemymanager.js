@@ -1,6 +1,5 @@
 // == enemymanager.js ==
 import { iscolliding } from './utils.js';
-import { scoreboardobj } from './main.js';
 
 const hitSound = new Audio('assets/audio/ow.mp3');
 hitSound.volume = 1.0;
@@ -20,20 +19,20 @@ export class enemymanager {
     this.timer = 0;
   }
 
-  update(delta, level, gravity, player, scoreboard) {
-    this.timer += delta;
+  update(deltaTime, level, gravity, player, scoreboard) {
+    this.timer += deltaTime * 60;
 
     // dynamic spawn interval
-    const score = scoreboardobj.score;
+    const score = scoreboard.score;
     let spawninterval = 0;
     if (score < 5) {
-      spawninterval = 200;
+      spawninterval = 80;  // Reduced from 200 for faster initial spawning
     } else if (score < 10) {
-      spawninterval = 170;
+      spawninterval = 70;  // Reduced from 170
     } else if (score < 15) {
-      spawninterval = 130;
+      spawninterval = 60;  // Reduced from 130
     } else if (score < 20) {
-      spawninterval = 90;
+      spawninterval = 50;  // Reduced from 90
     } else {
       spawninterval = 30;
     }
@@ -50,22 +49,50 @@ export class enemymanager {
       const platformsinsight = level.platforms.filter(
         (p) => p.x < x + 200 && p.x + p.w > x - 200
       );
-      if (platformsinsight.length > 0) {
+      
+      // Spawn guarantee: Always spawn helicopters even without platforms
+      if (platformsinsight.length === 0 && score >= 3) {
+        // Force helicopter spawn when no platforms available
+        const ex = x;
+        const ey = 200 + Math.random() * 100;  // Spawn at reasonable height
+        const newEnemy = {
+          type: 'helicopter',
+          x: ex,
+          y: ey,
+          w: 50,
+          h: 30,
+          vx: -2,
+          vy: 0,
+          hoverTimer: 0,
+          hoverCenterY: ey  // Fixed: was baseY, should be hoverCenterY
+        };
+        if (!this.overlapsExisting(newEnemy)) {
+          this.enemies.push(newEnemy);
+        }
+      } else if (platformsinsight.length > 0) {
         const p = platformsinsight[Math.floor(Math.random() * platformsinsight.length)];
 
         if (!spawnHelicopter) {
           // normal patroller
-          const ex = p.x + (Math.random() * (p.w - 40));
+          // Always spawn at exact center of platform
+          const ex = p.x + (p.w / 2) - 20;  // Center minus half enemy width
           const ey = p.y - 40;
-          const dir = Math.random() < 0.5 ? -1 : 1;
+          
+          // Always start moving right for consistency
+          const dir = 1;
+          
           const newEnemy = {
             type: 'patrol',
             x: ex,
             y: ey,
             w: 40,
             h: 40,
-            vx: dir * (1 + Math.random() * 1.5),
-            vy: 0
+            vx: 1.0,  // Consistent speed, no randomization
+            vy: 0,
+            // Store platform bounds for reliable edge detection
+            platformLeft: p.x,
+            platformRight: p.x + p.w,
+            platformIndex: level.platforms.indexOf(p)  // Use index instead of reference
           };
           if (!this.overlapsExisting(newEnemy)) {
             this.enemies.push(newEnemy);
@@ -95,59 +122,67 @@ export class enemymanager {
     // update existing enemies
     for (let e of this.enemies) {
       if (e.type === 'patrol') {
-        e.vy += gravity;
-        e.x += e.vx;
-        e.y += e.vy;
+        // Validate platform still exists using index
+        const platform = level.platforms[e.platformIndex];
+        if (!platform) { 
+          e.dead = true; 
+          continue; 
+        }
+        
+        // Pre-movement boundary check - simple and effective
+        const nextX = e.x + (e.vx * deltaTime * 60);
+        if (nextX < platform.x || nextX + e.w > platform.x + platform.w) {
+          e.vx = -e.vx;  // Turn around
+        } else {
+          e.x = nextX;  // Move only if within bounds
+        }
+        
+        // Apply gravity
+        e.vy += gravity * deltaTime * 60;
+        e.y += e.vy * deltaTime * 60;
+        
+        // Safety clamp position to platform bounds
+        e.x = Math.max(platform.x, Math.min(e.x, platform.x + platform.w - e.w));
+        
+        // Kill enemy if it somehow falls too far below platform
+        if (e.y > platform.y + 50) { 
+          e.dead = true; 
+        }
 
         let landedOnPlatform = false;
         for (let p of level.platforms) {
           // check bounding-box overlap
           if (iscolliding(e.x, e.y, e.w, e.h, p.x, p.y, p.w, p.h)) {
             // compare e's old bottom to the platform's old top
-            const oldEnemyBottom = (e.y - e.vy) + e.h;
-            const oldPlatformTop = p.oldY;
+            const oldEnemyBottom = (e.y - e.vy * deltaTime * 60) + e.h;
+            const oldPlatformTop = p.oldY || p.y;
 
             // if the enemy was above the old platform top
-            if (oldEnemyBottom <= oldPlatformTop) {
+            if (oldEnemyBottom <= oldPlatformTop + 5) {
               // shift horizontally by platform's dx
-              const dx = p.x - p.oldX;
+              const dx = p.x - (p.oldX || p.x);
               e.x += dx;
               // shift vertically by platform's dy
-              const dy = p.y - p.oldY;
+              const dy = p.y - (p.oldY || p.y);
               e.y += dy;
 
               // place enemy on top
               e.y = p.y - e.h;
               e.vy = 0;
               landedOnPlatform = true;
+              
+              // Update platform bounds when landing
+              e.platformLeft = p.x;
+              e.platformRight = p.x + p.w;
+              e.platformId = p;
             }
-          }
-        }
-
-        // flip direction if no future platform
-        if (landedOnPlatform) {
-          const footcheckx = e.x + (e.vx > 0 ? e.w : 0) + e.vx * 5;
-          const footchecky = e.y + e.h + 1;
-          let onplatform = false;
-          for (let p of level.platforms) {
-            if (
-              footcheckx >= p.x &&
-              footcheckx <= p.x + p.w &&
-              footchecky >= p.y &&
-              footchecky <= p.y + p.h
-            ) {
-              onplatform = true;
-              break;
-            }
-          }
-          if (!onplatform) {
-            e.vx = -e.vx;
           }
         }
       } else if (e.type === 'helicopter') {
-        e.hoverTimer += 0.05;
+        e.hoverTimer += 0.05 * deltaTime * 60;
         const amplitude = 20;
-        e.x += e.vx;
+        e.x += e.vx * deltaTime * 60;
+        e.x = Math.max(0, Math.min(e.x, 5000));  // Prevent infinite travel
         e.y = e.hoverCenterY + Math.sin(e.hoverTimer) * amplitude;
       }
 

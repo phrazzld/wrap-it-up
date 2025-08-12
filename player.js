@@ -10,7 +10,7 @@ export class playerclass {
     this.h = 60;
     this.vx = 0;
     this.vy = 0;
-    this.speed = 4;
+    this.speed = 6;  // Increased from 4 for better game feel
     this.direction = 1;
     this.animframe = 0;
     this.animtimer = 0;
@@ -29,7 +29,7 @@ export class playerclass {
     this.isJumping = false;
   }
 
-  update(keys, gravity, jumppower) {
+  update(keys, gravity, jumppower, deltaTime) {
     // horizontal
     if (keys.left) {
       this.vx = -this.speed;
@@ -57,11 +57,11 @@ export class playerclass {
     }
 
     // apply gravity
-    this.vy += gravity;
+    this.vy += gravity * deltaTime * 60;
 
     // move
-    this.x += this.vx;
-    this.y += this.vy;
+    this.x += this.vx * deltaTime * 60;
+    this.y += this.vy * deltaTime * 60;
 
     // animate
     if (this.vx !== 0) {

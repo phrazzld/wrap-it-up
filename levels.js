@@ -165,7 +165,7 @@ export class level {
     );
   }
 
-  update(playerx) {
+  update(playerx, deltaTime) {
     // chunk generation
     const nextboundary = this.generatedchunks * this.chunkwidth + this.chunkwidth;
     if (playerx + 600 > nextboundary) {
@@ -181,7 +181,7 @@ export class level {
       p.oldX = p.x;
       p.oldY = p.y;
 
-      p.moveTimer += p.moveSpeed;
+      p.moveTimer += p.moveSpeed * deltaTime * 60;
 
       if (p.moveType === 'vertical') {
         p.y = p.centerY + Math.sin(p.moveTimer) * p.moveAmplitudeY;
