@@ -2,7 +2,7 @@
 export const GameConfig = {
   // Player speeds (pixels per second)
   PLAYER_SPEED: 400,        // Was 6 * 60 = 360, increased for snappier movement
-  PLAYER_JUMP_POWER: 900,   // Was 15 * 60 = 900, jump velocity
+  PLAYER_JUMP_POWER: 1000,  // Was 15 * 60 = 900, increased for higher jumps
   GRAVITY: 2400,            // Was 0.4 * 60 = 24, increased for better feel
   
   // Enemy speeds (pixels per second)
@@ -17,5 +17,5 @@ export const GameConfig = {
   },
   
   // Global speed multiplier - adjust this to make entire game faster/slower
-  GAME_SPEED: 1.5   // 1.5x for 50% faster gameplay!
+  GAME_SPEED: 1.3   // 1.3x for 30% faster gameplay - balanced feel
 };
