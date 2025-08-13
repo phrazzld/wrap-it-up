@@ -155,7 +155,7 @@ export class enemymanager {
           // check bounding-box overlap
           if (iscolliding(e.x, e.y, e.w, e.h, p.x, p.y, p.w, p.h)) {
             // compare e's old bottom to the platform's old top
-            const oldEnemyBottom = (e.y - e.vy * deltaTime * 60) + e.h;
+            const oldEnemyBottom = (e.y - e.vy * deltaTime * GameConfig.GAME_SPEED) + e.h;
             const oldPlatformTop = p.oldY || p.y;
 
             // if the enemy was above the old platform top
