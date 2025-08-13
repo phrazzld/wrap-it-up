@@ -19,6 +19,8 @@ export class playerclass {
     this.health = 3;
     this.onground = false;
     this.isJumping = false;
+    this.stompCombo = 0;
+    this.stompTimer = 0;
   }
 
   reset() {
@@ -29,9 +31,25 @@ export class playerclass {
     this.health = 3;
     this.onground = false;
     this.isJumping = false;
+    this.stompCombo = 0;
+    this.stompTimer = 0;
   }
 
   update(keys, deltaTime) {
+    // Update combo timer
+    if (this.stompTimer > 0) {
+      this.stompTimer -= deltaTime;
+      if (this.stompTimer <= 0) {
+        this.stompCombo = 0;  // Reset combo when timer expires
+      }
+    }
+    
+    // Reset combo if we land on ground
+    if (this.onground && this.stompCombo > 0) {
+      this.stompCombo = 0;
+      this.stompTimer = 0;
+    }
+    
     // horizontal
     if (keys.left) {
       this.vx = -this.speed;
@@ -76,5 +94,39 @@ export class playerclass {
       this.animframe = 0;
       this.animtimer = 0;
     }
+  }
+  
+  bounceFromStomp(holdingJump, enemyType = 'patrol') {
+    // Calculate base bounce power
+    let bouncePower = GameConfig.PLAYER_JUMP_POWER * 
+      (holdingJump ? GameConfig.STOMP_BOUNCE_BOOSTED : GameConfig.STOMP_BOUNCE_BASE);
+    
+    // Add velocity bonus for high-speed stomps
+    if (this.vy > 0) {
+      bouncePower += this.vy * GameConfig.STOMP_VELOCITY_BONUS;
+    }
+    
+    // Apply combo multiplier (capped at max)
+    const comboBonus = Math.min(this.stompCombo * GameConfig.STOMP_COMBO_BONUS, GameConfig.STOMP_COMBO_MAX);
+    bouncePower *= (1 + comboBonus);
+    
+    // Apply enemy type modifier
+    const enemyModifier = GameConfig.ENEMY_BOUNCE_MODIFIERS[enemyType] || 1.0;
+    bouncePower *= enemyModifier;
+    
+    // Apply the bounce
+    this.vy = -bouncePower;
+    
+    // Update combo tracking
+    this.stompCombo++;
+    this.stompTimer = GameConfig.STOMP_COMBO_TIMEOUT;
+    
+    // Reset jump state so player can jump/stomp again
+    this.isJumping = false;
+    this.onground = false;
+    
+    // Play jump sound for feedback
+    jumpSound.currentTime = 0;
+    jumpSound.play();
   }
 }

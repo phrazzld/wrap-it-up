@@ -34,6 +34,23 @@ export class scoreboard {
 
     // draw the health bar right below
     this.drawhealthbar(ctx, player);
+    
+    // draw combo counter if active
+    if (player.stompCombo > 0) {
+      ctx.save();
+      // Make it pop with size and color
+      const comboScale = 1 + (player.stompCombo * 0.1);
+      ctx.font = `${28 * comboScale}px sans-serif`;
+      ctx.fillStyle = '#ffff00';
+      ctx.strokeStyle = '#ff6600';
+      ctx.lineWidth = 3;
+      const comboText = 'COMBO x' + player.stompCombo + '!';
+      const textX = 20;
+      const textY = 120;
+      ctx.strokeText(comboText, textX, textY);
+      ctx.fillText(comboText, textX, textY);
+      ctx.restore();
+    }
 
     // flash if recently hit
     if (this.flashalpha > 0) {

@@ -143,7 +143,7 @@ function update(deltaTime) {
   // update scoreboard effects
   scoreboardobj.update();
   // update enemies
-  enemies.update(deltaTime, gamelevel, player, scoreboardobj);
+  enemies.update(deltaTime, gamelevel, player, scoreboardobj, keys);
 
   // camera
   const midscreen = canvas.width * 0.5;

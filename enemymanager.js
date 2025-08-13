@@ -20,7 +20,7 @@ export class enemymanager {
     this.timer = 0;
   }
 
-  update(deltaTime, level, player, scoreboard) {
+  update(deltaTime, level, player, scoreboard, keys = {}) {
     this.timer += deltaTime;  // Use seconds, not frames!
 
     // dynamic spawn interval
@@ -234,12 +234,17 @@ export class enemymanager {
     if (playerStomped.length > 0) {
       enemyKilledSound.currentTime = 0;
       enemyKilledSound.play();
+      
+      // Determine enemy type for bounce calculation (use first enemy's type)
+      const enemyType = playerStomped[0].type || 'patrol';
+      
       for (let e of playerStomped) {
         e.dead = true;
         scoreboard.addpoints(1);
       }
-      // give the player that bounce
-      player.vy = -8;
+      
+      // Use the new physics-based bounce method
+      player.bounceFromStomp(keys.up || false, enemyType);
     }
 
     // now see if we got hit by any enemy we *didn't* stomp
@@ -250,9 +255,9 @@ export class enemymanager {
         hitSound.play();
         player.health--;
         scoreboard.flash();
-        // bounce horizontally away
-        player.vx = (player.x < e.x) ? -6 : 6;
-        player.vy = -5;
+        // Apply physics-scaled knockback and hurt bounce
+        player.vx = (player.x < e.x) ? -GameConfig.HURT_KNOCKBACK : GameConfig.HURT_KNOCKBACK;
+        player.vy = -GameConfig.PLAYER_JUMP_POWER * GameConfig.HURT_BOUNCE_POWER;
         e.dead = true;
       }
     }
