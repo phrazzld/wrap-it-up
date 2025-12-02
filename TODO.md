@@ -69,7 +69,7 @@
   Time: 10m
   ```
 
-- [ ] Flatten input handler nesting
+- [x] Flatten input handler nesting
   ```
   File: main.js:68-113
   Problem: 45 lines with 3-level nesting, hard to follow
