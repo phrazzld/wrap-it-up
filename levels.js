@@ -1,6 +1,5 @@
 // == level.js ==
 import { GameConfig } from './gameconfig.js';
-import { scoreboardobj } from './main.js';
 import { iscolliding } from './utils.js';
 
 const giftSound = new Audio('assets/audio/coin.mp3');
@@ -59,10 +58,10 @@ export class level {
       oldX: 0,
       oldY: 350
     });
-    this.generatechunk(0);
+    this.generatechunk(0, 0);
   }
 
-  generatechunk(chunkindex) {
+  generatechunk(chunkindex, score = 0) {
     const startx = chunkindex * this.chunkwidth;
     const platformcount = 3 + Math.floor(Math.random() * 3);
     let lastp = this.platforms[this.platforms.length - 1];
@@ -108,7 +107,6 @@ export class level {
           }
 
           if (!collision) {
-            const score = scoreboardobj.score;
             const oddsPlatformIsMoving = 1 / (1 + Math.exp(-0.2 * (score - 10)));
             const baseSpeed = 0.02;
             const baseAmplitude = 40;
@@ -166,11 +164,11 @@ export class level {
     );
   }
 
-  update(playerx, deltaTime) {
+  update(playerx, deltaTime, score = 0) {
     // chunk generation
     const nextboundary = this.generatedchunks * this.chunkwidth + this.chunkwidth;
     if (playerx + 600 > nextboundary) {
-      this.generatechunk(this.generatedchunks + 1);
+      this.generatechunk(this.generatedchunks + 1, score);
       this.generatedchunks++;
     }
 

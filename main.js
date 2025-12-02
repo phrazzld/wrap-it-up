@@ -139,7 +139,7 @@ function update(deltaTime) {
   // check collisions with platforms & gifts
   gamelevel.collideplayer(player, scoreboardobj);
   // spawn new chunks
-  gamelevel.update(player.x, deltaTime);
+  gamelevel.update(player.x, deltaTime, scoreboardobj.score);
   // update scoreboard effects
   scoreboardobj.update();
   // update enemies

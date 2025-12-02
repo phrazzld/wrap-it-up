@@ -42,7 +42,7 @@
   Time: 2m
   ```
 
-- [ ] Fix circular dependency
+- [x] Fix circular dependency
   ```
   File: levels.js:3
   Problem: levels.js imports scoreboardobj from main.js (circular)
