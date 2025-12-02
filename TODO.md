@@ -21,7 +21,7 @@
   Time: 5m
   ```
 
-- [ ] Sanitize leaderboard name input
+- [x] Sanitize leaderboard name input
   ```
   File: main.js:107-109
   Problem: Accepts any character including script tags, control chars, unicode

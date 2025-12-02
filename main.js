@@ -103,8 +103,8 @@ document.addEventListener('keydown', e => {
         // remove last char
         username = username.slice(0, -1);
       } else {
-        // add typed char if it's a letter, digit, etc.
-        if (e.key.length === 1 && username.length < maxnamechars) {
+        // add typed char only if alphanumeric or space
+        if (e.key.length === 1 && /^[a-zA-Z0-9 ]$/.test(e.key) && username.length < maxnamechars) {
           username += e.key;
         }
       }
