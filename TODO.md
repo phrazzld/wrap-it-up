@@ -52,7 +52,7 @@
   Time: 5m
   ```
 
-- [ ] Extract triggerGameOver() function
+- [x] Extract triggerGameOver() function
   ```
   File: main.js:157-174
   Problem: 7 lines duplicated for fall-death and health-death

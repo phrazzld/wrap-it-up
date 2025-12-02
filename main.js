@@ -131,6 +131,15 @@ function initgame() {
   enemies.reset();
 }
 
+function triggerGameOver() {
+  gameOverSound.play();
+  gamestate = 'gameover';
+  backgroundMusic.currentTime = 0;
+  backgroundMusic.pause();
+  menuMusic.currentTime = 0;
+  menuMusic.play();
+}
+
 function update(deltaTime) {
   if (gamestate !== 'playing') return;
 
@@ -155,22 +164,12 @@ function update(deltaTime) {
   const bottom = canvas.height - player.h;
   // if player falls off screen, game over
   if (player.y > bottom) {
-    gameOverSound.play();
-    gamestate = 'gameover';
-    backgroundMusic.currentTime = 0;
-    backgroundMusic.pause();
-    menuMusic.currentTime = 0;
-    menuMusic.play();
+    triggerGameOver();
   }
 
   // if out of health, game over
   if (player.health <= 0) {
-    gameOverSound.play();
-    gamestate = 'gameover';
-    backgroundMusic.currentTime = 0;
-    backgroundMusic.pause();
-    menuMusic.currentTime = 0;
-    menuMusic.play();
+    triggerGameOver();
   }
 
   // spawn MORE snow
