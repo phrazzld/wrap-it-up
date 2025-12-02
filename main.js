@@ -270,12 +270,6 @@ function draw() {
 
   // scoreboard
   scoreboardobj.draw(ctx, player);
-  
-  // FPS and speed display
-  ctx.fillStyle = 'yellow';
-  ctx.font = '16px monospace';
-  ctx.fillText('FPS: ' + Math.round(1/deltaTime), 10, 30);
-  ctx.fillText('Speed: ' + GameConfig.GAME_SPEED + 'x', 10, 50);
 }
 
 function drawmenu() {

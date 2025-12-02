@@ -34,7 +34,7 @@
   Time: 5m
   ```
 
-- [ ] Delete debug display
+- [x] Delete debug display
   ```
   File: main.js:274-278
   Fix: Delete these 4 lines showing FPS/Speed
