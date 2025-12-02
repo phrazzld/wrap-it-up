@@ -61,6 +61,10 @@ const gamelevel = new level({ maxhorizontal: 250, maxvertical: 80 });
 const enemies = new enemymanager();
 export const scoreboardobj = new scoreboard();
 
+/**
+ * Start a new game when the Enter key is pressed.
+ * @param {KeyboardEvent} e - The keyboard event to inspect for the Enter key.
+ */
 function handleMenuInput(e) {
   if (e.code === 'Enter') {
     initgame();
@@ -68,6 +72,17 @@ function handleMenuInput(e) {
   }
 }
 
+/**
+ * Handle keyboard input while the player is entering their name for the leaderboard.
+ *
+ * Processes special keys and text entry:
+ * - Enter: if the trimmed username is non-empty, submits it with the current score, then exits name-entry and returns to the menu.
+ * - Escape or 'R': cancel name-entry and return to the menu.
+ * - Backspace: remove the last character from the current username.
+ * - Printable characters: append a single alphanumeric character or space to the username until the maximum length is reached.
+ *
+ * @param {KeyboardEvent} e - The key event from the input stream.
+ */
 function handleNameEntry(e) {
   if (e.code === 'Enter') {
     if (username.trim().length > 0) {
@@ -94,6 +109,10 @@ function handleNameEntry(e) {
   }
 }
 
+/**
+ * Process keyboard input on the game over screen, starting name entry or returning to the menu.
+ * @param {KeyboardEvent} e - The key event from the user. When `Enter` is pressed and name entry is not active, begins name entry and clears the current username. When `KeyR` is pressed and name entry is not active, returns the game to the main menu. If name entry is already active, delegates handling to `handleNameEntry`.
+ */
 function handleGameOverInput(e) {
   if (!enteringname) {
     if (e.code === 'Enter') {
@@ -132,6 +151,11 @@ document.addEventListener('keyup', e => {
   if (e.code === 'ArrowUp' || e.code === 'Space') keys.up = false;
 });
 
+/**
+ * Prepare and start a new game session.
+ *
+ * Resets gameplay state to initial values, including player, camera, scoreboard, level data (platforms, gifts, generated chunks), and enemies; stops menu music and starts background music.
+ */
 function initgame() {
   menuMusic.currentTime = 0;
   menuMusic.pause();
@@ -146,6 +170,11 @@ function initgame() {
   enemies.reset();
 }
 
+/**
+ * Transition the game into the game-over state and update audio playback.
+ *
+ * Sets the global game state to 'gameover', plays the game-over sound, resets and pauses the background music, and starts the menu music from the beginning.
+ */
 function triggerGameOver() {
   gameOverSound.play();
   gamestate = 'gameover';
@@ -155,6 +184,15 @@ function triggerGameOver() {
   menuMusic.play();
 }
 
+/**
+ * Advance the game simulation by the given frame delta while the game is in the "playing" state.
+ *
+ * Updates player, level (including spawning new chunks and handling collisions), enemies, scoreboard effects,
+ * camera position, and snow particle spawning/cleanup. Will call triggerGameOver when the player falls below
+ * the visible area or when player health reaches zero.
+ *
+ * @param {number} deltaTime - Time elapsed since the previous frame, in seconds.
+ */
 function update(deltaTime) {
   if (gamestate !== 'playing') return;
 
@@ -227,6 +265,14 @@ function update(deltaTime) {
   }
 }
 
+/**
+ * Render the current frame to the canvas according to the active game state.
+ *
+ * When `gamestate` is "menu" or "gameover" this draws the corresponding screen;
+ * otherwise it draws the background, level, enemies (ground and air types),
+ * player sprite, snow effects, and the scoreboard. Entering the "gameover"
+ * branch also resets and pauses background music playback.
+ */
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -286,6 +332,12 @@ function draw() {
   scoreboardobj.draw(ctx, player);
 }
 
+/**
+ * Render the main menu screen including the title, start prompt, and leaderboard.
+ *
+ * Draws the menu background and overlay, renders the menu headline and hint text,
+ * and lists top scores from the global `gameleaderboard` onto the module's canvas 2D context.
+ */
 function drawmenu() {
   ctx.drawImage(menuImage, 0, 0, canvas.width, canvas.height);
 
