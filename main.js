@@ -61,6 +61,53 @@ const gamelevel = new level({ maxhorizontal: 250, maxvertical: 80 });
 const enemies = new enemymanager();
 export const scoreboardobj = new scoreboard();
 
+function handleMenuInput(e) {
+  if (e.code === 'Enter') {
+    initgame();
+    gamestate = 'playing';
+  }
+}
+
+function handleNameEntry(e) {
+  if (e.code === 'Enter') {
+    if (username.trim().length > 0) {
+      gameleaderboard.addscore(username.trim(), scoreboardobj.score);
+    }
+    enteringname = false;
+    gamestate = 'menu';
+    return;
+  }
+
+  if (e.code === 'Escape' || e.code === 'KeyR') {
+    enteringname = false;
+    gamestate = 'menu';
+    return;
+  }
+
+  if (e.code === 'Backspace') {
+    username = username.slice(0, -1);
+    return;
+  }
+
+  if (e.key.length === 1 && /^[a-zA-Z0-9 ]$/.test(e.key) && username.length < maxnamechars) {
+    username += e.key;
+  }
+}
+
+function handleGameOverInput(e) {
+  if (!enteringname) {
+    if (e.code === 'Enter') {
+      enteringname = true;
+      username = '';
+    } else if (e.code === 'KeyR') {
+      gamestate = 'menu';
+    }
+    return;
+  }
+
+  handleNameEntry(e);
+}
+
 // fewer flakes
 const snowflakes = [];
 let snowtimer = 0;
@@ -71,44 +118,12 @@ document.addEventListener('keydown', e => {
   if (e.code === 'ArrowUp' || e.code === 'Space') keys.up = true;
 
   if (gamestate === 'menu') {
-    // existing logic to start the game
-    if (e.code === 'Enter') {
-      initgame();
-      gamestate = 'playing';
-    }
-  } else if (gamestate === 'gameover') {
-    // if we're not currently in name entry
-    if (!enteringname) {
-      if (e.code === 'Enter') {
-        // either go to nameentry or skip it
-        enteringname = true;
-        username = '';
-      } else if (e.code === 'KeyR') {
-        gamestate = 'menu';
-      }
-    } else {
-      // user is typing the name
-      if (e.code === 'Enter') {
-        // finalize
-        if (username.trim().length > 0) {
-          gameleaderboard.addscore(username.trim(), scoreboardobj.score);
-        }
-        enteringname = false;
-        gamestate = 'menu';
-      } else if (e.code === 'Escape' || e.code === 'KeyR') {
-        // bail out
-        enteringname = false;
-        gamestate = 'menu';
-      } else if (e.code === 'Backspace') {
-        // remove last char
-        username = username.slice(0, -1);
-      } else {
-        // add typed char if it's a letter, digit, etc.
-        if (e.key.length === 1 && username.length < maxnamechars) {
-          username += e.key;
-        }
-      }
-    }
+    handleMenuInput(e);
+    return;
+  }
+
+  if (gamestate === 'gameover') {
+    handleGameOverInput(e);
   }
 });
 document.addEventListener('keyup', e => {
@@ -131,6 +146,15 @@ function initgame() {
   enemies.reset();
 }
 
+function triggerGameOver() {
+  gameOverSound.play();
+  gamestate = 'gameover';
+  backgroundMusic.currentTime = 0;
+  backgroundMusic.pause();
+  menuMusic.currentTime = 0;
+  menuMusic.play();
+}
+
 function update(deltaTime) {
   if (gamestate !== 'playing') return;
 
@@ -139,7 +163,7 @@ function update(deltaTime) {
   // check collisions with platforms & gifts
   gamelevel.collideplayer(player, scoreboardobj);
   // spawn new chunks
-  gamelevel.update(player.x, deltaTime);
+  gamelevel.update(player.x, deltaTime, scoreboardobj.score);
   // update scoreboard effects
   scoreboardobj.update();
   // update enemies
@@ -155,22 +179,12 @@ function update(deltaTime) {
   const bottom = canvas.height - player.h;
   // if player falls off screen, game over
   if (player.y > bottom) {
-    gameOverSound.play();
-    gamestate = 'gameover';
-    backgroundMusic.currentTime = 0;
-    backgroundMusic.pause();
-    menuMusic.currentTime = 0;
-    menuMusic.play();
+    triggerGameOver();
   }
 
   // if out of health, game over
   if (player.health <= 0) {
-    gameOverSound.play();
-    gamestate = 'gameover';
-    backgroundMusic.currentTime = 0;
-    backgroundMusic.pause();
-    menuMusic.currentTime = 0;
-    menuMusic.play();
+    triggerGameOver();
   }
 
   // spawn MORE snow
@@ -270,12 +284,6 @@ function draw() {
 
   // scoreboard
   scoreboardobj.draw(ctx, player);
-  
-  // FPS and speed display
-  ctx.fillStyle = 'yellow';
-  ctx.font = '16px monospace';
-  ctx.fillText('FPS: ' + Math.round(1/deltaTime), 10, 30);
-  ctx.fillText('Speed: ' + GameConfig.GAME_SPEED + 'x', 10, 50);
 }
 
 function drawmenu() {

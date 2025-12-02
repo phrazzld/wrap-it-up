@@ -85,8 +85,8 @@ export class playerclass {
 
     // animate
     if (this.vx !== 0) {
-      this.animtimer++;
-      if (this.animtimer > 8) {
+      this.animtimer += deltaTime;
+      if (this.animtimer > 0.13) { // ~8 frames at 60fps
         this.animtimer = 0;
         this.animframe = (this.animframe + 1) % 4;
       }
