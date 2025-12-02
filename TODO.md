@@ -1,124 +1,90 @@
-# Game Speed Overhaul - The Right Way
+# TODO: Sprint - Polish & Ship
 
-*"The deltaTime * 60 pattern is wrong. It makes the game faster at lower framerates. Fix the root cause."* - Carmack
+## Context
+- Source: TASK.md (bug), BACKLOG.md "Now" section
+- Branch: TBD (create before starting)
+- Patterns: ES6 modules, class-based, vanilla JS
 
-## Critical Issue
-Game runs at wrong speeds. 50 FPS = 20% faster. 30 FPS = 2x faster. This is backwards and broken.
+## Tasks
 
-## Root Cause  
-`deltaTime * 60` assumes 60 FPS baseline but breaks frame independence. Need proper physics units.
+- [x] Fix animation timer frame-dependence
+  ```
+  File: player.js:87-96
+  Problem: animtimer++ counts frames, not time. 144Hz = 2x animation speed
+  Fix:
+    this.animtimer += deltaTime;
+    if (this.animtimer > 0.13) {  // ~8 frames at 60fps
+      this.animtimer = 0;
+      this.animframe = (this.animframe + 1) % 4;
+    }
+  Success: Animation identical at 30fps and 144fps
+  Time: 5m
+  ```
 
----
+- [ ] Sanitize leaderboard name input
+  ```
+  File: main.js:107-109
+  Problem: Accepts any character including script tags, control chars, unicode
+  Fix: Whitelist alphanumeric + space only
+    if (/^[a-zA-Z0-9 ]$/.test(e.key) && username.length < maxnamechars) {
+      username += e.key;
+    }
+  Success: <script>, emoji, control chars rejected; "John123" works
+  Risk: HIGH - ship blocker
+  Time: 5m
+  ```
 
-## Phase 1: Create Configuration (2 min) ✅
+- [ ] Delete debug display
+  ```
+  File: main.js:274-278
+  Fix: Delete these 4 lines showing FPS/Speed
+  Success: No yellow debug text in production
+  Time: 2m
+  ```
 
-**Completed: 17:22**
+- [ ] Fix circular dependency
+  ```
+  File: levels.js:3
+  Problem: levels.js imports scoreboardobj from main.js (circular)
+  Check: Already accepts scoreboard as param to collideplayer()
+  Fix: Remove unused import line
+  Success: `git grep "from './main.js'" levels.js` returns empty
+  Time: 5m
+  ```
 
-- [x] Create new file `gameconfig.js` in root directory
-- [x] Add export statement: `export const GameConfig = {`
-- [x] Add player speed constant: `PLAYER_SPEED: 400,` (pixels per second, was 6 * 60 = 360)
-- [x] Add jump power constant: `PLAYER_JUMP_POWER: 900,` (pixels per second, was 15 * 60 = 900)  
-- [x] Add gravity constant: `GRAVITY: 2400,` (pixels per second squared, was 0.4 * 60 = 24)
-- [x] Add enemy patrol speed: `ENEMY_PATROL_SPEED: 120,` (was 1.0 * 60)
-- [x] Add enemy helicopter speed: `ENEMY_HELICOPTER_SPEED: 150,`
-- [x] Add spawn intervals object: `ENEMY_SPAWN_INTERVAL: { INITIAL: 1.3, MEDIUM: 0.8, FAST: 0.5 },` (seconds not frames!)
-- [x] Add global speed multiplier: `GAME_SPEED: 1.5` (1.5x for faster gameplay)
-- [x] Close the export: `};`
+- [ ] Extract triggerGameOver() function
+  ```
+  File: main.js:157-174
+  Problem: 7 lines duplicated for fall-death and health-death
+  Fix: Extract function, call from both conditions
+    function triggerGameOver() {
+      gameOverSound.play();
+      gamestate = 'gameover';
+      backgroundMusic.currentTime = 0;
+      backgroundMusic.pause();
+      menuMusic.currentTime = 0;
+      menuMusic.play();
+    }
+  Success: Single function handles both death conditions
+  Time: 10m
+  ```
 
-## Phase 2: Fix Player Physics (5 min) ✅
+- [ ] Flatten input handler nesting
+  ```
+  File: main.js:68-113
+  Problem: 45 lines with 3-level nesting, hard to follow
+  Fix: Extract handleMenuInput(), handleGameOverInput(), handleNameEntry()
+  Success: Each handler <15 lines, max 1 level nesting
+  Time: 30m
+  ```
 
-**Completed: 17:24**
+## Deferred (see BACKLOG.md)
 
-- [x] Add import at top of player.js: `import { GameConfig } from './gameconfig.js';`
-- [x] Change line 13 from `this.speed = 6;` to `this.speed = GameConfig.PLAYER_SPEED;`
-- [x] Change line 60 from `this.vy += gravity * deltaTime * 60;` to `this.vy += GameConfig.GRAVITY * deltaTime * GameConfig.GAME_SPEED;`
-- [x] Change line 63 from `this.x += this.vx * deltaTime * 60;` to `this.x += this.vx * deltaTime * GameConfig.GAME_SPEED;`
-- [x] Change line 64 from `this.y += this.vy * deltaTime * 60;` to `this.y += this.vy * deltaTime * GameConfig.GAME_SPEED;`
-- [x] Change line 39 from `this.vx = keys.left ? -this.speed : this.speed;` to use pixels/sec properly
-- [x] Change line 47 from `this.vy = -jumppower;` to `this.vy = -GameConfig.PLAYER_JUMP_POWER;`
+- Document magic numbers (1h) - do after shipping
+- Design tokens module (5h) - separate PR
 
-## Phase 3: Fix Enemy Timing (5 min) ✅
+## Notes
 
-**Completed: 17:26**
-
-- [x] Add import at top of enemymanager.js: `import { GameConfig } from './gameconfig.js';`
-- [x] Change line 23 from `this.timer += deltaTime * 60;` to `this.timer += deltaTime;` (use seconds!)
-- [x] Change line 29 from `spawninterval = 80;` to `spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.INITIAL;`
-- [x] Change line 31 from `spawninterval = 70;` to `spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.INITIAL * 0.8;`
-- [x] Change line 33 from `spawninterval = 60;` to `spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.MEDIUM;`
-- [x] Change line 35 from `spawninterval = 50;` to `spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.MEDIUM * 0.7;`
-- [x] Change line 37 from `spawninterval = 30;` to `spawninterval = GameConfig.ENEMY_SPAWN_INTERVAL.FAST;`
-- [x] Change line 90 from `vx: 1.0,` to `vx: GameConfig.ENEMY_PATROL_SPEED * (Math.random() < 0.5 ? -1 : 1),`
-- [x] Change line 136 from `const nextX = e.x + (e.vx * deltaTime * 60);` to `const nextX = e.x + (e.vx * deltaTime * GameConfig.GAME_SPEED);`
-- [x] Change line 140 from `e.x = nextX;` to proper movement calculation
-- [x] Change line 144 from `e.vy += gravity * deltaTime * 60;` to `e.vy += GameConfig.GRAVITY * deltaTime * GameConfig.GAME_SPEED;`
-- [x] Change line 145 from `e.y += e.vy * deltaTime * 60;` to `e.y += e.vy * deltaTime * GameConfig.GAME_SPEED;`
-- [x] Change line 182 from `e.hoverTimer += 0.05 * deltaTime * 60;` to `e.hoverTimer += deltaTime * 3;` (3 rad/sec)
-- [x] Change line 184 from `e.x += e.vx * deltaTime * 60;` to `e.x += e.vx * deltaTime * GameConfig.GAME_SPEED;`
-
-## Phase 4: Fix Main Loop & Effects (3 min) ✅
-
-**Completed: 17:28**
-
-- [x] Add import at top of main.js: `import { GameConfig } from './gameconfig.js';`
-- [x] Change line 138 from passing `gravity, jumppower` to just passing `deltaTime` (use config values internally)
-- [x] Change line 206 in snowflake update from `flake.y += flake.vy * deltaTime * 60;` to `flake.y += flake.vy * deltaTime * GameConfig.GAME_SPEED * 100;`
-- [x] Remove `const gravity = 0.4;` at line 101 (use GameConfig.GRAVITY)
-- [x] Remove `const jumppower = 15;` at line 102 (use GameConfig.PLAYER_JUMP_POWER)
-
-## Phase 5: Fix Platform Movement (2 min) ✅
-
-**Completed: 17:29**
-
-- [x] Add import at top of levels.js: `import { GameConfig } from './gameconfig.js';`
-- [x] Change line 184 from `p.moveTimer += p.moveSpeed * deltaTime * 60;` to `p.moveTimer += p.moveSpeed * deltaTime * GameConfig.GAME_SPEED;`
-
-## Phase 6: Add Speed Display (2 min) ✅
-
-**Completed: 17:31**
-
-- [x] Add FPS counter in main.js draw() after line 300: `ctx.fillStyle = 'yellow'; ctx.font = '16px monospace';`
-- [x] Add FPS text: `ctx.fillText('FPS: ' + Math.round(1/deltaTime), 10, 30);`
-- [x] Add speed multiplier text: `ctx.fillText('Speed: ' + GameConfig.GAME_SPEED + 'x', 10, 50);`
-- [x] Remove debug console.log at line 352 (replace with on-screen display)
-
-## Phase 7: Fine-Tune Speed (3 min) ✅
-
-**Completed: 17:33**
-
-- [x] Test game at current speed settings
-- [x] Adjust `GAME_SPEED` in gameconfig.js to 1.3, 1.5, or 2.0 based on feel → Set to 1.5x for action-packed gameplay
-- [x] Increase `PLAYER_SPEED` to 450 if still sluggish → Increased from 400 to 450
-- [x] Reduce spawn intervals by additional 20% if enemy density too low → Reduced all intervals by ~20%
-- [x] Increase `PLAYER_JUMP_POWER` to 1000 if jumps feel weak → Already at 1000
-
-## Phase 8: Cleanup (2 min) ✅
-
-**Completed: 17:35**
-
-- [x] Search for any remaining `deltaTime * 60` patterns and fix them → Fixed one at enemymanager.js:158
-- [x] Remove any leftover magic numbers - replace with config constants → All physics values in config
-- [x] Test at 30 FPS (Chrome throttling) - verify same game speed → Physics now frame-independent
-- [x] Test at 120 FPS (if available) - verify same game speed → Will run same speed at any FPS
-- [x] Commit with message "fix: proper frame-independent physics with configurable speed"
-
----
-
-## Success Metrics
-- Game runs at identical speed at 30, 60, and 120 FPS
-- Movement feels 50% faster than before
-- All speeds defined in meaningful units (pixels/second)
-- Single config file controls all gameplay speeds
-
-## What We're NOT Doing
-- ❌ Complex physics engines
-- ❌ Fixed timestep with interpolation  
-- ❌ Rewriting the entire game
-- ❌ Adding acceleration curves
-- ❌ State machines for movement
-
-**Total Tasks: 43**
-**Estimated Time: 25 minutes**
-**Lines Changed: ~50**
-
-*"First make it work, then make it right. This makes it right."* - Carmack
+- All tasks independent, can parallelize
+- No test infra yet (listed in BACKLOG.md "Next")
+- Keep patches minimal - no drive-by fixes
